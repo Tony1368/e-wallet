@@ -1,0 +1,55 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: user-auth
+          uri: ${USER_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/auth/**
+            
+        - id: user-management
+          uri: ${USER_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/users/**, /api/v1/admin/users/**
+        
+        - id: wallet-management
+          uri: ${WALLET_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/wallets/**, /api/v1/admin/wallets/**
+        
+        - id: transaction-management
+          uri: ${TRANSACTION_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/transactions/**, /api/v1/admin/transactions/**
+        
+        - id: payment-management
+          uri: ${PAYMENT_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/payments/**, /api/v1/transfers/**, /api/v1/admin/tracking/**
+        
+        - id: rewards
+          uri: ${WALLET_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/rewards/**
+
+eureka:
+  client:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

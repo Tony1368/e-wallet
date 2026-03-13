@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # User Management Database
+  user-db:
+    image: postgres:16-alpine
+    container_name: user-management-db
+    environment:
+      POSTGRES_DB: user_management_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - ewallet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # User Management Service
+  user-service:
+    build:
+      context: ./microservices
+      dockerfile: user-management-service/Dockerfile
+    container_name: user-management-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/user_management_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: YourSecretKeyForJWTTokenGenerationAndValidation
+      JWT_EXPIRATION_MS: 86400000
+    depends_on:
+      user-db:
+        condition: service_healthy
+    networks:
+      - ewallet-network
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./microservices
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      USER_SERVICE_URL: http://user-service:8081
+    depends_on:
+      - user-service
+    networks:
+      - ewallet-network
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ewallet-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:8080/api/v1
+    depends_on:
+      - api-gateway
+    networks:
+      - ewallet-network
+    restart: unless-stopped
+
+networks:
+  ewallet-network:
+    driver: bridge
+
+volumes:
+  user-db-data:

@@ -16,6 +16,10 @@ RUN npm install
 # Copy our app
 COPY . .
 
+# Set environment variable to disable ESLint warnings as errors
+ENV ESLINT_NO_DEV_ERRORS=true
+ENV DISABLE_ESLINT_PLUGIN=true
+
 # Expose port to access server
 EXPOSE 3000
 

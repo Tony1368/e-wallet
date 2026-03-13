@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // const instance = axios.create({ baseURL: "https://localhost:8243" });
-const instance = axios.create({ baseURL: "http://localhost:8082/api/v1" });
+const instance = axios.create({ baseURL: "http://localhost:8080/api/v1" });
 instance.defaults.headers.common["Content-Type"] = "application/json";
 
 // Add request interceptor to include JWT token

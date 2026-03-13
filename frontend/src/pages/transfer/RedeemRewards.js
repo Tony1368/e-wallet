@@ -181,18 +181,18 @@ export default function RedeemRewards() {
     }
     
     try {
-      // In real implementation, call API to redeem
-      // await HttpService.postWithAuth('/rewards/redeem', {
-      //   rewardId: selectedReward.id,
-      //   quantity: quantity,
-      //   userId: currentUser.id
-      // });
+      // Call API to redeem
+      await HttpService.postWithAuth('/rewards/redeem', {
+        rewardId: selectedReward.id,
+        quantity: quantity,
+        userId: currentUser.id,
+        walletId: selectedWalletId
+      });
       
-      // Mock successful redemption
       enqueueSnackbar(`Đổi thưởng thành công! Bạn đã đổi ${quantity} ${selectedReward.name}`, { variant: 'success' });
       
-      // Update user points
-      setUserPoints(prev => prev - totalPointsNeeded);
+      // Reload wallets to get updated balance
+      await loadData();
       
       // Update reward availability
       setRewards(prev => prev.map(reward => 

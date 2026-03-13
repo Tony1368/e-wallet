@@ -1,5 +1,5 @@
 # stage-1 : complete build environment
-FROM maven:3.8.1-openjdk-17-slim AS builder
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 RUN addgroup demogroup; adduser --ingroup demogroup --disabled-password demo
 USER demo
 WORKDIR /app
@@ -11,7 +11,7 @@ RUN mvn clean install -Dmaven.test.skip=true
 
 
 # stage-2 : minimal runtime environment
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # copy jar from the first stage
