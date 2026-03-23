@@ -30,12 +30,7 @@ spring:
         - id: payment-management
           uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
           predicates:
-            - Path=/api/v1/payments/**, /api/v1/transfers/**, /api/v1/admin/tracking/**
-            
-        - id: rewards
-          uri: ${WALLET_SERVICE_URL:http://localhost:8082}
-          predicates:
-            - Path=/api/v1/rewards/**
+            - Path=/api/v1/payments/**, /api/v1/transfers/**, /api/v1/rewards/**, /api/v1/admin/tracking/**
 
 eureka:
   client:

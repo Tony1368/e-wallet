@@ -1,8 +1,8 @@
-package com.hust.thailq.wallet.reward;
+package com.hust.thailq.payment.controller;
 
-import com.hust.thailq.wallet.dto.request.RedeemRequest;
-import com.hust.thailq.wallet.dto.response.CommandResponse;
-import com.hust.thailq.wallet.service.WalletService;
+import com.hust.thailq.payment.dto.request.RedeemRequest;
+import com.hust.thailq.payment.dto.response.CommandResponse;
+import com.hust.thailq.payment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,11 +14,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class RewardController {
 
-    private final WalletService walletService;
+    private final PaymentService paymentService;
 
     @PostMapping("/redeem")
     public ResponseEntity<CommandResponse> redeemReward(@Valid @RequestBody RedeemRequest request) {
-        CommandResponse response = walletService.redeemReward(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.redeemReward(request));
     }
 }

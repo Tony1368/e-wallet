@@ -82,7 +82,7 @@ export default function WalletToWallet() {
       };
 
     // HttpService.postWithAuth('/wallet/hust/wallets/transfer', formValues)
-      const response = await HttpService.postWithAuth('/wallets/transfer', transactionData);
+      const response = await HttpService.postWithAuth('/payments/transfer', transactionData);
       
         if (response?.message) {
           enqueueSnackbar(response.message, { variant: 'warning' });

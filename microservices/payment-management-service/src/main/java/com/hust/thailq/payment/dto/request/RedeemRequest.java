@@ -1,4 +1,4 @@
-package com.hust.thailq.wallet.dto.request;
+package com.hust.thailq.payment.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

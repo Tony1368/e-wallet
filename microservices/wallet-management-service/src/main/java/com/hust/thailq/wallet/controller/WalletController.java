@@ -1,6 +1,5 @@
 package com.hust.thailq.wallet.controller;
 
-import com.hust.thailq.wallet.dto.request.TransactionRequest;
 import com.hust.thailq.wallet.dto.request.UpdateWalletStatusRequest;
 import com.hust.thailq.wallet.dto.request.WalletRequest;
 import com.hust.thailq.wallet.dto.response.CommandResponse;
@@ -14,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/wallets")
@@ -65,19 +66,9 @@ public class WalletController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/transfer")
-    public ResponseEntity<CommandResponse> transferFunds(@Valid @RequestBody TransactionRequest request) {
-        System.out.println("Transfer request received: " + request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(walletService.transferFunds(request));
-    }
-
-    @PostMapping("/add")
-    public ResponseEntity<CommandResponse> addFunds(@Valid @RequestBody TransactionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(walletService.addFunds(request));
-    }
-
-    @PostMapping("/withdraw")
-    public ResponseEntity<CommandResponse> withdrawFunds(@Valid @RequestBody TransactionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(walletService.withdrawFunds(request));
+    @PutMapping("/{id}/balance")
+    public ResponseEntity<Void> updateBalance(@PathVariable Long id, @RequestBody Map<String, BigDecimal> body) {
+        walletService.updateBalance(id, body.get("balance"));
+        return ResponseEntity.noContent().build();
     }
 }

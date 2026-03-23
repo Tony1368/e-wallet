@@ -1,29 +1,28 @@
-package com.hust.thailq.wallet.client;
+package com.hust.thailq.payment.client;
 
-import com.hust.thailq.wallet.dto.request.TransactionRequest;
+import com.hust.thailq.payment.dto.request.TransactionRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TransactionClient {
 
-    private final RestTemplate restTemplate = new RestTemplate();
-    
-    @Value("${services.transaction.url:http://transaction-service:8083}")
+    private final RestTemplate restTemplate;
+
+    @Value("${services.transaction.url:http://localhost:8083}")
     private String transactionServiceUrl;
 
     public void createTransaction(TransactionRequest request) {
         try {
             restTemplate.postForObject(
-                transactionServiceUrl + "/api/v1/transactions", 
-                request, 
-                Object.class
-            );
+                    transactionServiceUrl + "/api/v1/transactions", request, Object.class);
         } catch (Exception e) {
-            System.err.println("Failed to create transaction record: " + e.getMessage());
+            log.error("Failed to create transaction record: {}", e.getMessage());
         }
     }
 }

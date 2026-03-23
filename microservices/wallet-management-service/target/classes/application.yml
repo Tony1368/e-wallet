@@ -21,8 +21,6 @@ spring:
 services:
   user:
     url: ${USER_SERVICE_URL:http://localhost:8081}
-  transaction:
-    url: ${TRANSACTION_SERVICE_URL:http://localhost:8083}
 
 eureka:
   client:

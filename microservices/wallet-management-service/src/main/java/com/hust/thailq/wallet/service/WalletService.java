@@ -1,10 +1,7 @@
 package com.hust.thailq.wallet.service;
 
-import com.hust.thailq.wallet.client.TransactionClient;
 import com.hust.thailq.wallet.domain.entity.Wallet;
 import com.hust.thailq.wallet.domain.enums.WalletStatus;
-import com.hust.thailq.wallet.dto.request.RedeemRequest;
-import com.hust.thailq.wallet.dto.request.TransactionRequest;
 import com.hust.thailq.wallet.dto.request.WalletRequest;
 import com.hust.thailq.wallet.dto.response.CommandResponse;
 import com.hust.thailq.wallet.dto.response.WalletResponse;
@@ -27,7 +24,6 @@ import java.util.stream.Collectors;
 public class WalletService {
 
     private final WalletRepository walletRepository;
-    private final TransactionClient transactionClient;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             .withZone(ZoneId.systemDefault());
 
@@ -104,91 +100,11 @@ public class WalletService {
     }
 
     @Transactional
-    public CommandResponse transferFunds(TransactionRequest request) {
-        Wallet fromWallet = walletRepository.findByIban(request.getFromWalletIban())
-                .orElseThrow(() -> new RuntimeException("From wallet not found"));
-        Wallet toWallet = walletRepository.findByIban(request.getToWalletIban())
-                .orElseThrow(() -> new RuntimeException("To wallet not found"));
-
-        if (fromWallet.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new RuntimeException("Insufficient funds");
-        }
-
-        fromWallet.setBalance(fromWallet.getBalance().subtract(request.getAmount()));
-        toWallet.setBalance(toWallet.getBalance().add(request.getAmount()));
-
-        walletRepository.save(fromWallet);
-        walletRepository.save(toWallet);
-
-        // Create transaction record
-        TransactionRequest txRequest = new TransactionRequest();
-        txRequest.setAmount(request.getAmount());
-        txRequest.setDescription(request.getDescription());
-        txRequest.setFromWalletIban(request.getFromWalletIban());
-        txRequest.setToWalletIban(request.getToWalletIban());
-        txRequest.setFromWalletId(fromWallet.getId());
-        txRequest.setToWalletId(toWallet.getId());
-        txRequest.setTypeId(request.getTypeId() != null ? request.getTypeId() : 1L);
-        transactionClient.createTransaction(txRequest);
-
-        return CommandResponse.builder()
-                .id(fromWallet.getId())
-                .message("Transfer successful")
-                .build();
-    }
-
-    @Transactional
-    public CommandResponse addFunds(TransactionRequest request) {
-        Wallet wallet = walletRepository.findByIban(request.getToWalletIban())
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
-
-        wallet.setBalance(wallet.getBalance().add(request.getAmount()));
+    public void updateBalance(Long id, BigDecimal newBalance) {
+        Wallet wallet = walletRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Wallet not found with id: " + id));
+        wallet.setBalance(newBalance);
         walletRepository.save(wallet);
-
-        return CommandResponse.builder()
-                .id(wallet.getId())
-                .message("Funds added successfully")
-                .build();
-    }
-
-    @Transactional
-    public CommandResponse withdrawFunds(TransactionRequest request) {
-        Wallet wallet = walletRepository.findByIban(request.getFromWalletIban())
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
-
-        if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new RuntimeException("Insufficient funds");
-        }
-
-        wallet.setBalance(wallet.getBalance().subtract(request.getAmount()));
-        walletRepository.save(wallet);
-
-        return CommandResponse.builder()
-                .id(wallet.getId())
-                .message("Withdrawal successful")
-                .build();
-    }
-
-    @Transactional
-    public CommandResponse redeemReward(RedeemRequest request) {
-        Wallet wallet = walletRepository.findById(request.getWalletId())
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
-
-        // Mock reward points calculation - in real implementation, get from reward service
-        // For now, assume each reward costs points equal to rewardId * 100 * quantity
-        java.math.BigDecimal pointsNeeded = java.math.BigDecimal.valueOf(request.getRewardId() * 100L * request.getQuantity());
-
-        if (wallet.getBalance().compareTo(pointsNeeded) < 0) {
-            throw new RuntimeException("Insufficient points");
-        }
-
-        wallet.setBalance(wallet.getBalance().subtract(pointsNeeded));
-        walletRepository.save(wallet);
-
-        return CommandResponse.builder()
-                .id(wallet.getId())
-                .message("Reward redeemed successfully")
-                .build();
     }
 
     private WalletResponse toResponse(Wallet wallet) {

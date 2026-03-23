@@ -111,7 +111,6 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       USER_SERVICE_URL: http://user-service:8081
-      TRANSACTION_SERVICE_URL: http://transaction-service:8083
     depends_on:
       wallet-db:
         condition: service_healthy
@@ -206,6 +205,7 @@ services:
       - ewallet-network
     restart: unless-stopped
 
+
 networks:
   ewallet-network:
     driver: bridge
@@ -215,3 +215,4 @@ volumes:
   wallet-db-data:
   transaction-db-data:
   payment-db-data:
+

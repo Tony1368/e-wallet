@@ -1,6 +1,5 @@
-package com.hust.thailq.wallet.dto.request;
+package com.hust.thailq.payment.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -14,19 +13,15 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class TransactionRequest {
 
-    @NotNull(message = "{validation.field.amount.required}")
+    @NotNull(message = "Amount is required")
     private BigDecimal amount;
 
-    @Size(max = 50, message = "{validation.field.description.length}")
+    @Size(max = 50)
     private String description;
 
     private String fromWalletIban;
-
     private String toWalletIban;
-
     private Long fromWalletId;
-
     private Long toWalletId;
-
     private Long typeId;
 }
