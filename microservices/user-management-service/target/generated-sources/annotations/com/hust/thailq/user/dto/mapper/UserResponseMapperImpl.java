@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-03-13T14:09:25+0700",
-    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Oracle Corporation)"
+    date = "2026-04-12T09:33:24+0700",
+    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
 public class UserResponseMapperImpl implements UserResponseMapper {
@@ -27,11 +27,11 @@ public class UserResponseMapperImpl implements UserResponseMapper {
         UserResponse userResponse = new UserResponse();
 
         userResponse.setRoles( roleSetToRoleResponseList( entity.getRoles() ) );
-        userResponse.setId( entity.getId() );
-        userResponse.setUsername( entity.getUsername() );
-        userResponse.setFirstName( entity.getFirstName() );
-        userResponse.setLastName( entity.getLastName() );
         userResponse.setEmail( entity.getEmail() );
+        userResponse.setFirstName( entity.getFirstName() );
+        userResponse.setId( entity.getId() );
+        userResponse.setLastName( entity.getLastName() );
+        userResponse.setUsername( entity.getUsername() );
 
         return userResponse;
     }
