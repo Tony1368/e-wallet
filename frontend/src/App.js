@@ -16,6 +16,10 @@ import AdminTransaction from './pages/admin/AdminTransaction';
 import AdminWallet from './pages/admin/AdminWallet';
 import UserTracking from './pages/admin/UserTracking';
 import FraudConfig from './pages/admin/FraudConfig';
+import PosSimulator from './pages/pos/PosSimulator';
+import EmployeePortal from './pages/employee/EmployeePortal';
+import StoreManagerPortal from './pages/store-manager/StoreManagerPortal';
+import AccountingDashboard from './pages/accounting/AccountingDashboard';
 import AuthService, { decodeJwt } from './services/AuthService';
 
 export default function App() {
@@ -26,7 +30,6 @@ export default function App() {
 
   useEffect(() => {
     const handleLogout = () => {
-      // Clear timers to prevent multiple triggers
       if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
       if (tokenCheckIntervalRef.current) clearInterval(tokenCheckIntervalRef.current);
       // eslint-disable-next-line no-use-before-define
@@ -39,7 +42,7 @@ export default function App() {
 
     const resetInactivityTimer = () => {
       if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
-      inactivityTimeoutRef.current = setTimeout(handleLogout, 15 * 60 * 1000); // 15 minutes
+      inactivityTimeoutRef.current = setTimeout(handleLogout, 15 * 60 * 1000);
     };
 
     const checkTokenExpiry = () => {
@@ -54,22 +57,19 @@ export default function App() {
 
     const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
 
-    // Only run timers if user is logged in
     if (AuthService.getCurrentUser()) {
       events.forEach((event) => window.addEventListener(event, resetInactivityTimer));
       resetInactivityTimer();
-
-      tokenCheckIntervalRef.current = setInterval(checkTokenExpiry, 10000); // check every 10s
+      tokenCheckIntervalRef.current = setInterval(checkTokenExpiry, 10000);
       checkTokenExpiry();
     }
 
-    // Cleanup function to remove listeners and timers
     return () => {
       if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
       if (tokenCheckIntervalRef.current) clearInterval(tokenCheckIntervalRef.current);
       events.forEach((event) => window.removeEventListener(event, resetInactivityTimer));
     };
-  }, [location.pathname, navigate]); // Rerun effect on navigation
+  }, [location.pathname, navigate]);
 
   return (
     <Routes>
@@ -109,6 +109,34 @@ export default function App() {
           <Route path="transactions" element={<PrivateRoute />}>
             <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER']} />}>
               <Route index element={<Transaction />} />
+            </Route>
+          </Route>
+
+          {/* POS Simulator - Thu ngân */}
+          <Route path="pos" element={<PrivateRoute />}>
+            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_CASHIER']} />}>
+              <Route index element={<PosSimulator />} />
+            </Route>
+          </Route>
+
+          {/* Employee Portal - Nhân viên */}
+          <Route path="employee" element={<PrivateRoute />}>
+            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_CUSTOMER']} />}>
+              <Route index element={<EmployeePortal />} />
+            </Route>
+          </Route>
+
+          {/* Store Manager Portal */}
+          <Route path="store-manager" element={<PrivateRoute />}>
+            <Route element={<ProtectedRoute roles={['ROLE_ADMIN', 'ROLE_MANAGER']} />}>
+              <Route index element={<StoreManagerPortal />} />
+            </Route>
+          </Route>
+
+          {/* Accounting Dashboard */}
+          <Route path="accounting" element={<PrivateRoute />}>
+            <Route element={<ProtectedRoute roles={['ROLE_ADMIN', 'ROLE_ACCOUNTANT']} />}>
+              <Route index element={<AccountingDashboard />} />
             </Route>
           </Route>
 

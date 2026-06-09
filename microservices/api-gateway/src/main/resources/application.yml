@@ -17,6 +17,11 @@ spring:
           predicates:
             - Path=/api/v1/users/**, /api/v1/admin/users/**
             
+        - id: user-tracking
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/admin/tracking/**
+            
         - id: wallet-management
           uri: ${WALLET_SERVICE_URL:http://localhost:8082}
           predicates:
@@ -30,7 +35,17 @@ spring:
         - id: payment-management
           uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
           predicates:
-            - Path=/api/v1/payments/**, /api/v1/transfers/**, /api/v1/rewards/**, /api/v1/admin/tracking/**
+            - Path=/api/v1/payments/**, /api/v1/transfers/**, /api/v1/rewards/**
+            
+        - id: accounting-service
+          uri: ${ACCOUNTING_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/accounting/**
+            
+        - id: fraud-service
+          uri: ${FRAUD_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/v1/fraud/**, /api/v1/admin/fraud-config/**
 
 eureka:
   client:

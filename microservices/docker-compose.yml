@@ -1,5 +1,9 @@
 services:
-  # PostgreSQL Databases
+  # ========================
+  # INFRASTRUCTURE LAYER
+  # ========================
+
+  # --- PostgreSQL Databases ---
   user-db:
     image: postgres:16-alpine
     container_name: user-management-db
@@ -76,7 +80,118 @@ services:
       timeout: 5s
       retries: 5
 
-  # Microservices
+  accounting-db:
+    image: postgres:16-alpine
+    container_name: accounting-db
+    environment:
+      POSTGRES_DB: accounting_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - accounting-db-data:/var/lib/postgresql/data
+    networks:
+      - ewallet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  fraud-db:
+    image: postgres:16-alpine
+    container_name: fraud-db
+    environment:
+      POSTGRES_DB: fraud_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - fraud-db-data:/var/lib/postgresql/data
+    networks:
+      - ewallet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Redis (Cache cho Wallet Balance) ---
+  redis:
+    image: redis:alpine
+    container_name: ewallet-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - ewallet-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # --- Zookeeper (Kafka dependency) ---
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: ewallet-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
+    networks:
+      - ewallet-network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # --- Kafka Broker ---
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: ewallet-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_LOG_RETENTION_HOURS: 168
+    networks:
+      - ewallet-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+
+  # ========================
+  # APPLICATION LAYER
+  # ========================
+
   user-service:
     build:
       context: .
@@ -111,8 +226,14 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       USER_SERVICE_URL: http://user-service:8081
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       wallet-db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       user-service:
         condition: service_started
@@ -133,11 +254,15 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       WALLET_SERVICE_URL: http://wallet-service:8082
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on:
       transaction-db:
         condition: service_healthy
       wallet-service:
         condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - ewallet-network
     restart: unless-stopped
@@ -156,6 +281,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       WALLET_SERVICE_URL: http://wallet-service:8082
       TRANSACTION_SERVICE_URL: http://transaction-service:8083
+      FRAUD_SERVICE_URL: http://fraud-detection-service:8086
     depends_on:
       payment-db:
         condition: service_healthy
@@ -163,6 +289,50 @@ services:
         condition: service_started
       transaction-service:
         condition: service_started
+      fraud-detection-service:
+        condition: service_started
+    networks:
+      - ewallet-network
+    restart: unless-stopped
+
+  accounting-service:
+    build:
+      context: .
+      dockerfile: ./accounting-service/Dockerfile
+    container_name: accounting-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://accounting-db:5432/accounting_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      accounting-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - ewallet-network
+    restart: unless-stopped
+
+  fraud-detection-service:
+    build:
+      context: .
+      dockerfile: ./fraud-detection-service/Dockerfile
+    container_name: fraud-detection-service
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://fraud-db:5432/fraud_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      fraud-db:
+        condition: service_healthy
     networks:
       - ewallet-network
     restart: unless-stopped
@@ -180,11 +350,15 @@ services:
       WALLET_SERVICE_URL: http://wallet-service:8082
       TRANSACTION_SERVICE_URL: http://transaction-service:8083
       PAYMENT_SERVICE_URL: http://payment-service:8084
+      ACCOUNTING_SERVICE_URL: http://accounting-service:8085
+      FRAUD_SERVICE_URL: http://fraud-detection-service:8086
     depends_on:
       - user-service
       - wallet-service
       - transaction-service
       - payment-service
+      - accounting-service
+      - fraud-detection-service
     networks:
       - ewallet-network
     restart: unless-stopped
@@ -215,4 +389,9 @@ volumes:
   wallet-db-data:
   transaction-db-data:
   payment-db-data:
-
+  accounting-db-data:
+  fraud-db-data:
+  redis-data:
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:

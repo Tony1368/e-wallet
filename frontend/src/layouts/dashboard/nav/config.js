@@ -24,6 +24,30 @@ const navConfig = [
     icon: icon('ic_transaction'),
   },
   {
+    title: 'Cổng Nhân viên',
+    path: '/employee',
+    icon: icon('ic_user'),
+    roles: ['ROLE_USER', 'ROLE_CUSTOMER'],
+  },
+  {
+    title: 'Giả lập POS',
+    path: '/pos',
+    icon: icon('ic_transfer'),
+    roles: ['ROLE_ADMIN', 'ROLE_CASHIER'],
+  },
+  {
+    title: 'Quản lý Cửa hàng',
+    path: '/store-manager',
+    icon: icon('ic_managewallet'),
+    roles: ['ROLE_ADMIN', 'ROLE_MANAGER'],
+  },
+  {
+    title: 'Kế toán',
+    path: '/accounting',
+    icon: icon('ic_managetransaction'),
+    roles: ['ROLE_ADMIN', 'ROLE_ACCOUNTANT'],
+  },
+  {
     title: 'Quản Lý Giao Dịch',
     path: '/admin/transactions',
     icon: icon('ic_managetransaction'),

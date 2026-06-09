@@ -105,8 +105,7 @@ export default function WithdrawFunds() {
         ...clientInfo
       };
 
-    // HttpService.postWithAuth('/wallet/hust/wallets/withdraw', formValues)
-      const response = await HttpService.postWithAuth('/wallets/withdraw', transactionData);
+      const response = await HttpService.postWithAuth('/payments/withdraw', transactionData);
       
         enqueueSnackbar('Rút Điểm Thưởng Ví Điện Tử Thành Công', { variant: 'success' });
         navigate('/transactions');

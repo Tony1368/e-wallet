@@ -25,6 +25,8 @@
         <module>wallet-management-service</module>
         <module>transaction-management-service</module>
         <module>payment-management-service</module>
+        <module>accounting-service</module>
+        <module>fraud-detection-service</module>
         <module>api-gateway</module>
     </modules>
     

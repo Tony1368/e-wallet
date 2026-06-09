@@ -1,0 +1,8 @@
+D:\SourceCode\e-wallet\microservices\fraud-detection-service\src\main\java\com\hust\thailq\fraud\controller\FraudConfigController.java
+D:\SourceCode\e-wallet\microservices\fraud-detection-service\src\main\java\com\hust\thailq\fraud\controller\FraudController.java
+D:\SourceCode\e-wallet\microservices\fraud-detection-service\src\main\java\com\hust\thailq\fraud\domain\entity\FraudRuleConfig.java
+D:\SourceCode\e-wallet\microservices\fraud-detection-service\src\main\java\com\hust\thailq\fraud\dto\FraudCheckRequest.java
+D:\SourceCode\e-wallet\microservices\fraud-detection-service\src\main\java\com\hust\thailq\fraud\dto\FraudCheckResponse.java
+D:\SourceCode\e-wallet\microservices\fraud-detection-service\src\main\java\com\hust\thailq\fraud\FraudDetectionApplication.java
+D:\SourceCode\e-wallet\microservices\fraud-detection-service\src\main\java\com\hust\thailq\fraud\repository\FraudRuleConfigRepository.java
+D:\SourceCode\e-wallet\microservices\fraud-detection-service\src\main\java\com\hust\thailq\fraud\service\FraudDetectionService.java

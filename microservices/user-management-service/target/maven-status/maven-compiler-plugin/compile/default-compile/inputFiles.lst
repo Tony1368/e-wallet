@@ -5,6 +5,7 @@ D:\SourceCode\e-wallet\microservices\user-management-service\src\main\java\com\h
 D:\SourceCode\e-wallet\microservices\user-management-service\src\main\java\com\hust\thailq\user\config\SecurityConfig.java
 D:\SourceCode\e-wallet\microservices\user-management-service\src\main\java\com\hust\thailq\user\controller\AdminUserController.java
 D:\SourceCode\e-wallet\microservices\user-management-service\src\main\java\com\hust\thailq\user\controller\AuthController.java
+D:\SourceCode\e-wallet\microservices\user-management-service\src\main\java\com\hust\thailq\user\controller\UserTrackingController.java
 D:\SourceCode\e-wallet\microservices\user-management-service\src\main\java\com\hust\thailq\user\domain\entity\Role.java
 D:\SourceCode\e-wallet\microservices\user-management-service\src\main\java\com\hust\thailq\user\domain\entity\User.java
 D:\SourceCode\e-wallet\microservices\user-management-service\src\main\java\com\hust\thailq\user\domain\entity\UserActivity.java

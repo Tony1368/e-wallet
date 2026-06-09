@@ -1,0 +1,8 @@
+com\hust\thailq\fraud\FraudDetectionApplication.class
+com\hust\thailq\fraud\dto\FraudCheckRequest.class
+com\hust\thailq\fraud\dto\FraudCheckResponse.class
+com\hust\thailq\fraud\repository\FraudRuleConfigRepository.class
+com\hust\thailq\fraud\controller\FraudController.class
+com\hust\thailq\fraud\domain\entity\FraudRuleConfig.class
+com\hust\thailq\fraud\controller\FraudConfigController.class
+com\hust\thailq\fraud\service\FraudDetectionService.class

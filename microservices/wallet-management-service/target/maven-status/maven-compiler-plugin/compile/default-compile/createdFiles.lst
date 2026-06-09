@@ -1,1 +1,13 @@
+com\hust\thailq\wallet\dto\response\CommandResponse$CommandResponseBuilder.class
+com\hust\thailq\wallet\domain\entity\Wallet.class
+com\hust\thailq\wallet\domain\enums\WalletStatus.class
+com\hust\thailq\wallet\controller\WalletController.class
+com\hust\thailq\wallet\dto\response\CommandResponse.class
+com\hust\thailq\wallet\dto\response\WalletResponse.class
+com\hust\thailq\wallet\repository\WalletRepository.class
+com\hust\thailq\wallet\dto\request\UpdateWalletStatusRequest.class
+com\hust\thailq\wallet\service\WalletService.class
+com\hust\thailq\wallet\dto\request\WalletRequest.class
+com\hust\thailq\wallet\config\RedisConfig.class
 com\hust\thailq\wallet\WalletManagementApplication.class
+com\hust\thailq\wallet\controller\AdminWalletController.class

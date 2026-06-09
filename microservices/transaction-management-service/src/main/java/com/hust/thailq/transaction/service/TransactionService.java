@@ -5,6 +5,8 @@ import com.hust.thailq.transaction.domain.entity.Transaction;
 import com.hust.thailq.transaction.domain.enums.Status;
 import com.hust.thailq.transaction.dto.request.TransactionRequest;
 import com.hust.thailq.transaction.dto.response.TransactionResponse;
+import com.hust.thailq.transaction.event.TransactionCompletedEvent;
+import com.hust.thailq.transaction.event.TransactionEventProducer;
 import com.hust.thailq.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final WalletClient walletClient;
+    private final TransactionEventProducer transactionEventProducer;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             .withZone(ZoneId.systemDefault());
 
@@ -43,8 +46,6 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public List<TransactionResponse> findAllByUserId(Long userId) {
-        // Get all transactions - in real implementation, filter by user's wallets
-        // For now, return all transactions as demo
         return transactionRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -66,6 +67,17 @@ public class TransactionService {
         transaction.setStatus(Status.SUCCESS);
         
         Transaction saved = transactionRepository.save(transaction);
+
+        // Publish event to Kafka for async processing (accounting, notifications, etc.)
+        TransactionCompletedEvent event = new TransactionCompletedEvent(
+                saved.getReferenceNumber(),
+                saved.getAmount(),
+                saved.getFromWalletId(),
+                saved.getToWalletId(),
+                saved.getDescription()
+        );
+        transactionEventProducer.publishTransactionCompleted(event);
+
         return toResponse(saved);
     }
 
@@ -80,7 +92,6 @@ public class TransactionService {
         response.setFromWalletId(transaction.getFromWalletId());
         response.setToWalletId(transaction.getToWalletId());
         
-        // Populate wallet info - simplified without user info for now
         TransactionResponse.WalletInfo fromWallet = new TransactionResponse.WalletInfo();
         fromWallet.setId(transaction.getFromWalletId());
         TransactionResponse.UserInfo fromUser = new TransactionResponse.UserInfo();

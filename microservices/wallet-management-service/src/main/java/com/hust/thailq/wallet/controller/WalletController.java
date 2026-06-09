@@ -71,4 +71,46 @@ public class WalletController {
         walletService.updateBalance(id, body.get("balance"));
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/debit")
+    public ResponseEntity<Void> debit(@PathVariable Long id, @RequestBody Map<String, BigDecimal> body) {
+        walletService.debit(id, body.get("amount"));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/credit")
+    public ResponseEntity<Void> credit(@PathVariable Long id, @RequestBody Map<String, BigDecimal> body) {
+        walletService.credit(id, body.get("amount"));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/batch-credit")
+    public ResponseEntity<Map<String, Object>> batchCredit(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(file.getInputStream()));
+            String line;
+            int processed = 0;
+            // Skip header
+            reader.readLine();
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 2) {
+                    String iban = parts[0].trim();
+                    BigDecimal amount = new BigDecimal(parts[1].trim());
+                    try {
+                        WalletResponse wallet = walletService.findByIban(iban);
+                        walletService.credit(wallet.getId(), amount);
+                        processed++;
+                    } catch (Exception e) {
+                        // Skip invalid rows
+                    }
+                }
+            }
+            reader.close();
+            return ResponseEntity.ok(Map.of("processedCount", processed, "message", "Batch credit completed"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Error processing file: " + e.getMessage()));
+        }
+    }
 }

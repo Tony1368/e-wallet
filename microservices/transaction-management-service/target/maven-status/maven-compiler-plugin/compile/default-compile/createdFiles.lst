@@ -1,1 +1,16 @@
+com\hust\thailq\transaction\event\TransactionCompletedEvent.class
+com\hust\thailq\transaction\domain\entity\Transaction.class
+com\hust\thailq\transaction\repository\TransactionRepository.class
+com\hust\thailq\transaction\service\TransactionService.class
+com\hust\thailq\transaction\dto\response\TransactionResponse$WalletInfo.class
+com\hust\thailq\transaction\client\WalletClient.class
+com\hust\thailq\transaction\dto\response\TransactionResponse$UserInfo.class
+com\hust\thailq\transaction\controller\AdminTransactionController.class
+com\hust\thailq\transaction\controller\TransactionController.class
+com\hust\thailq\transaction\event\TransactionEventProducer.class
+com\hust\thailq\transaction\dto\response\TransactionResponse$TypeInfo.class
 com\hust\thailq\transaction\TransactionManagementApplication.class
+com\hust\thailq\transaction\domain\enums\Status.class
+com\hust\thailq\transaction\dto\response\TransactionResponse.class
+com\hust\thailq\transaction\client\WalletClient$WalletDto.class
+com\hust\thailq\transaction\dto\request\TransactionRequest.class

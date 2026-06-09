@@ -4,6 +4,7 @@ com\hust\thailq\user\service\AuthService.class
 com\hust\thailq\user\repository\RoleRepository.class
 com\hust\thailq\user\service\RoleService.class
 com\hust\thailq\user\dto\response\JwtResponse.class
+com\hust\thailq\user\controller\UserTrackingController.class
 com\hust\thailq\user\security\AuthTokenFilter.class
 com\hust\thailq\user\service\GeolocationService.class
 com\hust\thailq\user\domain\entity\UserActivity.class

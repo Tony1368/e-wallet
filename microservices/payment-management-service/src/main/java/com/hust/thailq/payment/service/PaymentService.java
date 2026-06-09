@@ -1,5 +1,6 @@
 package com.hust.thailq.payment.service;
 
+import com.hust.thailq.payment.client.FraudClient;
 import com.hust.thailq.payment.client.TransactionClient;
 import com.hust.thailq.payment.client.WalletClient;
 import com.hust.thailq.payment.dto.request.RedeemRequest;
@@ -17,21 +18,24 @@ public class PaymentService {
 
     private final WalletClient walletClient;
     private final TransactionClient transactionClient;
+    private final FraudClient fraudClient;
 
     public CommandResponse transferFunds(TransactionRequest request) {
         WalletResponse fromWallet = walletClient.getWalletByIban(request.getFromWalletIban());
         WalletResponse toWallet = walletClient.getWalletByIban(request.getToWalletIban());
 
-        if (fromWallet.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new RuntimeException("Insufficient funds");
+        // Step 1: Fraud check
+        if (fraudClient.isFraudulent(fromWallet.getId(), request.getAmount())) {
+            throw new RuntimeException("Transaction blocked by fraud detection rules");
         }
 
-        walletClient.updateBalance(fromWallet.getId(),
-                fromWallet.getBalance().subtract(request.getAmount()));
-        walletClient.updateBalance(toWallet.getId(),
-                toWallet.getBalance().add(request.getAmount()));
+        // Step 2: Debit from source wallet (Redis atomic)
+        walletClient.debit(fromWallet.getId(), request.getAmount());
 
-        // Create transaction record
+        // Step 3: Credit to destination wallet (Redis atomic)
+        walletClient.credit(toWallet.getId(), request.getAmount());
+
+        // Step 4: Record transaction (triggers Kafka event → accounting-service)
         TransactionRequest txRequest = new TransactionRequest();
         txRequest.setAmount(request.getAmount());
         txRequest.setDescription(request.getDescription());
@@ -51,8 +55,19 @@ public class PaymentService {
     public CommandResponse addFunds(TransactionRequest request) {
         WalletResponse wallet = walletClient.getWalletByIban(request.getToWalletIban());
 
-        walletClient.updateBalance(wallet.getId(),
-                wallet.getBalance().add(request.getAmount()));
+        // Credit to wallet (Redis atomic)
+        walletClient.credit(wallet.getId(), request.getAmount());
+
+        // Record transaction → Kafka → accounting
+        TransactionRequest txRequest = new TransactionRequest();
+        txRequest.setAmount(request.getAmount());
+        txRequest.setDescription(request.getDescription() != null ? request.getDescription() : "Add funds");
+        txRequest.setFromWalletIban(request.getToWalletIban());
+        txRequest.setToWalletIban(request.getToWalletIban());
+        txRequest.setFromWalletId(wallet.getId());
+        txRequest.setToWalletId(wallet.getId());
+        txRequest.setTypeId(4L); // Add Funds type
+        transactionClient.createTransaction(txRequest);
 
         return CommandResponse.builder()
                 .id(wallet.getId())
@@ -63,12 +78,24 @@ public class PaymentService {
     public CommandResponse withdrawFunds(TransactionRequest request) {
         WalletResponse wallet = walletClient.getWalletByIban(request.getFromWalletIban());
 
-        if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new RuntimeException("Insufficient funds");
+        // Fraud check
+        if (fraudClient.isFraudulent(wallet.getId(), request.getAmount())) {
+            throw new RuntimeException("Withdrawal blocked by fraud detection rules");
         }
 
-        walletClient.updateBalance(wallet.getId(),
-                wallet.getBalance().subtract(request.getAmount()));
+        // Debit from wallet (Redis atomic - will throw if insufficient)
+        walletClient.debit(wallet.getId(), request.getAmount());
+
+        // Record transaction → Kafka → accounting
+        TransactionRequest txRequest = new TransactionRequest();
+        txRequest.setAmount(request.getAmount());
+        txRequest.setDescription(request.getDescription() != null ? request.getDescription() : "Withdraw funds");
+        txRequest.setFromWalletIban(request.getFromWalletIban());
+        txRequest.setToWalletIban(request.getFromWalletIban());
+        txRequest.setFromWalletId(wallet.getId());
+        txRequest.setToWalletId(wallet.getId());
+        txRequest.setTypeId(5L); // Withdraw type
+        transactionClient.createTransaction(txRequest);
 
         return CommandResponse.builder()
                 .id(wallet.getId())
@@ -81,12 +108,19 @@ public class PaymentService {
 
         BigDecimal pointsNeeded = BigDecimal.valueOf(request.getRewardId() * 100L * request.getQuantity());
 
-        if (wallet.getBalance().compareTo(pointsNeeded) < 0) {
-            throw new RuntimeException("Insufficient points");
-        }
+        // Debit points (Redis atomic - will throw if insufficient)
+        walletClient.debit(wallet.getId(), pointsNeeded);
 
-        walletClient.updateBalance(wallet.getId(),
-                wallet.getBalance().subtract(pointsNeeded));
+        // Record transaction → Kafka → accounting
+        TransactionRequest txRequest = new TransactionRequest();
+        txRequest.setAmount(pointsNeeded);
+        txRequest.setDescription("Redeem reward #" + request.getRewardId());
+        txRequest.setFromWalletIban(null);
+        txRequest.setToWalletIban(null);
+        txRequest.setFromWalletId(wallet.getId());
+        txRequest.setToWalletId(wallet.getId());
+        txRequest.setTypeId(6L); // Redeem type
+        transactionClient.createTransaction(txRequest);
 
         return CommandResponse.builder()
                 .id(wallet.getId())

@@ -101,8 +101,7 @@ export default function AddFunds() {
         ...clientInfo
       };
 
-      // HttpService.postWithAuth('/wallet/hust/wallets/add-funds', formValues)
-      const response = await HttpService.postWithAuth('/wallets/add', transactionData);
+      const response = await HttpService.postWithAuth('/payments/add', transactionData);
       
       enqueueSnackbar('Nạp Điểm Thưởng Vào Ví Điện Tử Thành Công', { variant: 'success' });
       navigate('/transactions');
