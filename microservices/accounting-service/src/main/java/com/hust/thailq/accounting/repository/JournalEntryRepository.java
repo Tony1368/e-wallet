@@ -14,5 +14,11 @@ public interface JournalEntryRepository extends JpaRepository<JournalEntry, Long
 
     Page<JournalEntry> findByCreatedAtBetween(Instant start, Instant end, Pageable pageable);
 
+    List<JournalEntry> findByCreatedAtBetween(Instant start, Instant end);
+
+    Page<JournalEntry> findByTransactionType(String transactionType, Pageable pageable);
+
+    Page<JournalEntry> findByCreatedAtBetweenAndTransactionType(Instant start, Instant end, String transactionType, Pageable pageable);
+
     List<JournalEntry> findByCreatedAtBetweenAndErpTransferredFalse(Instant start, Instant end);
 }

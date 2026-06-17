@@ -1,6 +1,8 @@
 D:\SourceCode\e-wallet\microservices\wallet-management-service\src\main\java\com\hust\thailq\wallet\config\RedisConfig.java
+D:\SourceCode\e-wallet\microservices\wallet-management-service\src\main\java\com\hust\thailq\wallet\config\RestTemplateConfig.java
 D:\SourceCode\e-wallet\microservices\wallet-management-service\src\main\java\com\hust\thailq\wallet\controller\AdminWalletController.java
 D:\SourceCode\e-wallet\microservices\wallet-management-service\src\main\java\com\hust\thailq\wallet\controller\WalletController.java
+D:\SourceCode\e-wallet\microservices\wallet-management-service\src\main\java\com\hust\thailq\wallet\domain\entity\Branch.java
 D:\SourceCode\e-wallet\microservices\wallet-management-service\src\main\java\com\hust\thailq\wallet\domain\entity\Wallet.java
 D:\SourceCode\e-wallet\microservices\wallet-management-service\src\main\java\com\hust\thailq\wallet\domain\enums\WalletStatus.java
 D:\SourceCode\e-wallet\microservices\wallet-management-service\src\main\java\com\hust\thailq\wallet\dto\request\UpdateWalletStatusRequest.java

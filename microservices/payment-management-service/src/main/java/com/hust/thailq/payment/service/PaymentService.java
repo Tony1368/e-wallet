@@ -44,10 +44,13 @@ public class PaymentService {
         txRequest.setFromWalletId(fromWallet.getId());
         txRequest.setToWalletId(toWallet.getId());
         txRequest.setTypeId(request.getTypeId() != null ? request.getTypeId() : 1L);
-        transactionClient.createTransaction(txRequest);
+        java.util.Map<String, Object> txResponse = transactionClient.createTransaction(txRequest);
+
+        Long transactionId = txResponse != null && txResponse.get("id") != null
+                ? Long.parseLong(String.valueOf(txResponse.get("id"))) : 0L;
 
         return CommandResponse.builder()
-                .id(fromWallet.getId())
+                .id(transactionId)
                 .message("Transfer successful")
                 .build();
     }

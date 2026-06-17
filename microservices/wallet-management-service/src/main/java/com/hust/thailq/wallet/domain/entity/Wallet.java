@@ -40,6 +40,9 @@ public class Wallet {
 
     private String bankInfo;
 
+    @Column(name = "branch_id")
+    private Long branchId;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();

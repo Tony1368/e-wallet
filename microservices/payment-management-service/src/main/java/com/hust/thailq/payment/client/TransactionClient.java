@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -17,12 +19,25 @@ public class TransactionClient {
     @Value("${services.transaction.url:http://localhost:8083}")
     private String transactionServiceUrl;
 
-    public void createTransaction(TransactionRequest request) {
+    public Map<String, Object> createTransaction(TransactionRequest request) {
         try {
-            restTemplate.postForObject(
-                    transactionServiceUrl + "/api/v1/transactions", request, Object.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.postForObject(
+                    transactionServiceUrl + "/api/v1/transactions", request, Map.class);
+            return response;
         } catch (Exception e) {
             log.error("Failed to create transaction record: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> getTransaction(Long id) {
+        try {
+            return restTemplate.getForObject(
+                    transactionServiceUrl + "/api/v1/transactions/" + id, java.util.Map.class);
+        } catch (Exception e) {
+            return null;
         }
     }
 }

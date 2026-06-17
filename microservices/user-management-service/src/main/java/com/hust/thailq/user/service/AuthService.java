@@ -78,7 +78,9 @@ public class AuthService {
                     .username(userDetails.getUsername())
                     .firstName(userDetails.getFirstName())
                     .lastName(userDetails.getLastName())
-                    .roles(roles).build();
+                    .roles(roles)
+                    .branchId(user != null ? user.getBranchId() : null)
+                    .build();
         } catch (Exception e) {
             // Track failed login attempt
             try {

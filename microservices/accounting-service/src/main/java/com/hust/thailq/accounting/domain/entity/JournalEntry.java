@@ -1,5 +1,6 @@
 package com.hust.thailq.accounting.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "journal_entry")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class JournalEntry {
 
     @Id
@@ -21,8 +23,9 @@ public class JournalEntry {
     @Column(nullable = false)
     private UUID transactionId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ledger_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Ledger ledger;
 
     @Column(nullable = false)
@@ -39,6 +42,9 @@ public class JournalEntry {
 
     @Column(length = 255)
     private String description;
+
+    @Column(length = 30)
+    private String transactionType;
 
     @Column(nullable = false)
     private Instant createdAt;

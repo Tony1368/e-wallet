@@ -1,2 +1,4 @@
 D:\SourceCode\e-wallet\microservices\api-gateway\src\main\java\com\hust\thailq\gateway\ApiGatewayApplication.java
 D:\SourceCode\e-wallet\microservices\api-gateway\src\main\java\com\hust\thailq\gateway\config\CorsConfig.java
+D:\SourceCode\e-wallet\microservices\api-gateway\src\main\java\com\hust\thailq\gateway\config\RateLimitConfig.java
+D:\SourceCode\e-wallet\microservices\api-gateway\src\main\java\com\hust\thailq\gateway\filter\JwtAuthFilter.java

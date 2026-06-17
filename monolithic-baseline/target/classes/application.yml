@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ewallet-monolithic
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ewallet_monolithic_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: MonolithicBaselineSecretKeyForJWTTokenGeneration2024
+  expiration-ms: 86400000
+
+logging:
+  level:
+    com.hust.thailq: INFO

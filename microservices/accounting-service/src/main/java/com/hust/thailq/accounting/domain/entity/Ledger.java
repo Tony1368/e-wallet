@@ -1,5 +1,6 @@
 package com.hust.thailq.accounting.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +11,7 @@ import java.time.Instant;
 @Setter
 @Entity
 @Table(name = "ledger")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Ledger {
 
     @Id

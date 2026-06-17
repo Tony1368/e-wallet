@@ -16,9 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,15 +47,38 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionResponse> findAllByUserId(Long userId) {
-        return transactionRepository.findAll().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public Page<TransactionResponse> findAllByUserId(Long userId, Pageable pageable) {
+        return transactionRepository.findByWalletId(userId, pageable)
+                .map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TransactionResponse> findByWalletIds(java.util.List<Long> walletIds, Pageable pageable) {
+        return transactionRepository.findByWalletIds(walletIds, pageable)
+                .map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Page<TransactionResponse> findAll(Pageable pageable) {
         return transactionRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getWalletStats(Long walletId) {
+        Instant startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant oneMinuteAgo = Instant.now().minusSeconds(60);
+
+        int dailyCount = transactionRepository.countByFromWalletIdAndCreatedAtAfter(walletId, startOfDay);
+        BigDecimal dailyTotal = transactionRepository.sumAmountByFromWalletIdAndCreatedAtAfter(walletId, startOfDay);
+        int lastMinuteCount = transactionRepository.countByFromWalletIdAndCreatedAtAfter(walletId, oneMinuteAgo);
+        BigDecimal avgAmount = transactionRepository.avgAmountByFromWalletId(walletId);
+
+        return Map.of(
+                "dailyTransactionCount", dailyCount,
+                "dailyTotalAmount", dailyTotal,
+                "transactionsInLastMinute", lastMinuteCount,
+                "averageTransactionAmount", avgAmount
+        );
     }
 
     @Transactional
@@ -74,7 +99,8 @@ public class TransactionService {
                 saved.getAmount(),
                 saved.getFromWalletId(),
                 saved.getToWalletId(),
-                saved.getDescription()
+                saved.getDescription(),
+                saved.getTypeId()
         );
         transactionEventProducer.publishTransactionCompleted(event);
 
@@ -91,28 +117,45 @@ public class TransactionService {
         response.setStatus(transaction.getStatus());
         response.setFromWalletId(transaction.getFromWalletId());
         response.setToWalletId(transaction.getToWalletId());
-        
-        TransactionResponse.WalletInfo fromWallet = new TransactionResponse.WalletInfo();
-        fromWallet.setId(transaction.getFromWalletId());
-        TransactionResponse.UserInfo fromUser = new TransactionResponse.UserInfo();
-        fromUser.setFirstName("User");
-        fromUser.setLastName(String.valueOf(transaction.getFromWalletId()));
-        fromWallet.setUser(fromUser);
-        response.setFromWallet(fromWallet);
-        
-        TransactionResponse.WalletInfo toWallet = new TransactionResponse.WalletInfo();
-        toWallet.setId(transaction.getToWalletId());
-        TransactionResponse.UserInfo toUser = new TransactionResponse.UserInfo();
-        toUser.setFirstName("User");
-        toUser.setLastName(String.valueOf(transaction.getToWalletId()));
-        toWallet.setUser(toUser);
-        response.setToWallet(toWallet);
-        
+
+        // Fetch real wallet info
+        response.setFromWallet(buildWalletInfo(transaction.getFromWalletId()));
+        response.setToWallet(buildWalletInfo(transaction.getToWalletId()));
+
         TransactionResponse.TypeInfo type = new TransactionResponse.TypeInfo();
         type.setId(transaction.getTypeId());
-        type.setName("Transfer");
+        switch (transaction.getTypeId().intValue()) {
+            case 1 -> type.setName("Chuyển điểm");
+            case 4 -> type.setName("Nạp điểm");
+            case 5 -> type.setName("Rút điểm");
+            case 6 -> type.setName("Đổi thưởng");
+            case 7 -> type.setName("Hoàn điểm");
+            case 8 -> type.setName("Cấp điểm batch");
+            default -> type.setName("Khác");
+        }
         response.setType(type);
-        
+
         return response;
+    }
+
+    private TransactionResponse.WalletInfo buildWalletInfo(Long walletId) {
+        TransactionResponse.WalletInfo info = new TransactionResponse.WalletInfo();
+        info.setId(walletId);
+
+        WalletClient.WalletDto wallet = walletClient.getWallet(walletId);
+        if (wallet != null) {
+            info.setName(wallet.getName());
+            info.setIban(wallet.getIban());
+            TransactionResponse.UserInfo userInfo = new TransactionResponse.UserInfo();
+            userInfo.setFirstName(wallet.getName());
+            userInfo.setLastName("");
+            info.setUser(userInfo);
+        } else {
+            TransactionResponse.UserInfo userInfo = new TransactionResponse.UserInfo();
+            userInfo.setFirstName("Ví #" + walletId);
+            userInfo.setLastName("");
+            info.setUser(userInfo);
+        }
+        return info;
     }
 }

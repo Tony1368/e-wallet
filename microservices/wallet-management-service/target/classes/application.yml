@@ -1,5 +1,10 @@
 server:
   port: 8082
+  tomcat:
+    threads:
+      max: 400
+    max-connections: 2000
+    accept-count: 200
 
 spring:
   application:
@@ -33,6 +38,8 @@ spring:
 services:
   user:
     url: ${USER_SERVICE_URL:http://localhost:8081}
+  transaction:
+    url: ${TRANSACTION_SERVICE_URL:http://localhost:8083}
 
 eureka:
   client:

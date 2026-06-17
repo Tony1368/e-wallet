@@ -72,6 +72,11 @@ public class WalletService {
         return walletRepository.findAll(pageable).map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    public Page<WalletResponse> findByBranchId(Long branchId, Pageable pageable) {
+        return walletRepository.findByBranchId(branchId, pageable).map(this::toResponse);
+    }
+
     @Transactional
     public CommandResponse create(WalletRequest request) {
         if (walletRepository.existsByIban(request.getIban())) {
@@ -224,6 +229,7 @@ public class WalletService {
         response.setCreatedAt(FORMATTER.format(wallet.getCreatedAt()));
         response.setBankInfo(wallet.getBankInfo());
         response.setStatus(wallet.getStatus());
+        response.setBranchId(wallet.getBranchId());
         return response;
     }
 }

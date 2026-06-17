@@ -1,0 +1,396 @@
+{
+	"info": {
+		"_postman_id": "e-wallet-hust-collection",
+		"name": "E-Wallet HUST - Microservices API",
+		"description": "Bộ API đầy đủ cho hệ thống ví điện tử HUST.\n\n**Hướng dẫn:**\n1. Gọi Login trước để lấy token\n2. Token sẽ tự động lưu vào biến {{token}}\n3. Các request khác sẽ tự động dùng token từ biến",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{"key": "baseUrl", "value": "http://localhost:8080/api/v1"},
+		{"key": "token", "value": ""},
+		{"key": "userId", "value": "1"},
+		{"key": "walletId", "value": "1"},
+		{"key": "branchId", "value": "2"}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+	},
+	"item": [
+		{
+			"name": "🔐 Auth",
+			"item": [
+				{
+					"name": "Login (admin)",
+					"event": [{"listen": "test", "script": {"exec": ["var jsonData = pm.response.json();", "if(jsonData.token) { pm.collectionVariables.set('token', jsonData.token); pm.collectionVariables.set('userId', jsonData.id); }"]}}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456aA\"\n}"},
+						"url": {"raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"]}
+					}
+				},
+				{
+					"name": "Login (quanly - Manager)",
+					"event": [{"listen": "test", "script": {"exec": ["var jsonData = pm.response.json();", "if(jsonData.token) { pm.collectionVariables.set('token', jsonData.token); pm.collectionVariables.set('userId', jsonData.id); }"]}}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"username\": \"quanly\",\n  \"password\": \"123456aA\"\n}"},
+						"url": {"raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"]}
+					}
+				},
+				{
+					"name": "Login (nhanvien - Customer)",
+					"event": [{"listen": "test", "script": {"exec": ["var jsonData = pm.response.json();", "if(jsonData.token) { pm.collectionVariables.set('token', jsonData.token); pm.collectionVariables.set('userId', jsonData.id); }"]}}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"username\": \"nhanvien\",\n  \"password\": \"123456aA\"\n}"},
+						"url": {"raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"]}
+					}
+				},
+				{
+					"name": "Signup (new user)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"firstName\": \"Nguyen\",\n  \"lastName\": \"Van A\",\n  \"username\": \"nguyenvana\",\n  \"email\": \"nguyenvana@hust.edu.vn\",\n  \"password\": \"Password123\"\n}"},
+						"url": {"raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"]}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"body": {"mode": "raw", "raw": "{}"},
+						"url": {"raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "👛 Wallets",
+			"item": [
+				{
+					"name": "Get my wallets",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/wallets/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["wallets", "users", "{{userId}}"]}
+					}
+				},
+				{
+					"name": "Get wallet by ID",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/wallets/1", "host": ["{{baseUrl}}"], "path": ["wallets", "1"]}
+					}
+				},
+				{
+					"name": "Get wallet by IBAN",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/wallets/iban/GB33BUKB20201555555555", "host": ["{{baseUrl}}"], "path": ["wallets", "iban", "GB33BUKB20201555555555"]}
+					}
+				},
+				{
+					"name": "Create wallet",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"name\": \"Ví mới test\",\n  \"iban\": \"VN12345678901234567890\",\n  \"balance\": 0,\n  \"userId\": {{userId}}\n}"},
+						"url": {"raw": "{{baseUrl}}/wallets", "host": ["{{baseUrl}}"], "path": ["wallets"]}
+					}
+				},
+				{
+					"name": "Credit wallet (add balance)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"amount\": 500000\n}"},
+						"url": {"raw": "{{baseUrl}}/wallets/1/credit", "host": ["{{baseUrl}}"], "path": ["wallets", "1", "credit"]}
+					}
+				},
+				{
+					"name": "Debit wallet (subtract balance)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"amount\": 1000\n}"},
+						"url": {"raw": "{{baseUrl}}/wallets/1/debit", "host": ["{{baseUrl}}"], "path": ["wallets", "1", "debit"]}
+					}
+				},
+				{
+					"name": "Update wallet status",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"status\": \"ACTIVE\"\n}"},
+						"url": {"raw": "{{baseUrl}}/wallets/1/status", "host": ["{{baseUrl}}"], "path": ["wallets", "1", "status"]}
+					}
+				},
+				{
+					"name": "Batch credit template (download)",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/wallets/batch-credit/template", "host": ["{{baseUrl}}"], "path": ["wallets", "batch-credit", "template"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "💸 Payments & Transfers",
+			"item": [
+				{
+					"name": "Transfer (chuyển điểm)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"fromWalletIban\": \"FR7630006000011234567890189\",\n  \"toWalletIban\": \"GB29NWBK60161331926819\",\n  \"amount\": 5000,\n  \"description\": \"Thanh toán đơn hàng #001\",\n  \"typeId\": 1\n}"},
+						"url": {"raw": "{{baseUrl}}/payments/transfer", "host": ["{{baseUrl}}"], "path": ["payments", "transfer"]}
+					}
+				},
+				{
+					"name": "Add funds (nạp điểm)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"toWalletIban\": \"GB33BUKB20201555555555\",\n  \"amount\": 100000,\n  \"description\": \"Nạp điểm từ ngân hàng\"\n}"},
+						"url": {"raw": "{{baseUrl}}/payments/add", "host": ["{{baseUrl}}"], "path": ["payments", "add"]}
+					}
+				},
+				{
+					"name": "Withdraw (rút điểm)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"fromWalletIban\": \"GB33BUKB20201555555555\",\n  \"amount\": 50000,\n  \"description\": \"Rút điểm về tài khoản\"\n}"},
+						"url": {"raw": "{{baseUrl}}/payments/withdraw", "host": ["{{baseUrl}}"], "path": ["payments", "withdraw"]}
+					}
+				},
+				{
+					"name": "Redeem reward (đổi thưởng)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"rewardId\": 1,\n  \"quantity\": 1,\n  \"userId\": 5,\n  \"walletId\": 5\n}"},
+						"url": {"raw": "{{baseUrl}}/rewards/redeem", "host": ["{{baseUrl}}"], "path": ["rewards", "redeem"]}
+					}
+				},
+				{
+					"name": "Transfer FRAUD TEST (vượt 50M - bị chặn)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"fromWalletIban\": \"FR7630006000011234567890189\",\n  \"toWalletIban\": \"GB29NWBK60161331926819\",\n  \"amount\": 60000000,\n  \"description\": \"Test fraud - should be blocked\"\n}"},
+						"url": {"raw": "{{baseUrl}}/payments/transfer", "host": ["{{baseUrl}}"], "path": ["payments", "transfer"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "📋 Transactions",
+			"item": [
+				{
+					"name": "Get all transactions (paginated)",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/transactions?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["transactions"], "query": [{"key": "page", "value": "0"}, {"key": "size", "value": "10"}]}
+					}
+				},
+				{
+					"name": "Get transactions by wallet IDs",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/transactions/wallets?ids=1,2", "host": ["{{baseUrl}}"], "path": ["transactions", "wallets"], "query": [{"key": "ids", "value": "1,2"}]}
+					}
+				},
+				{
+					"name": "Get transaction by ID",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/transactions/1", "host": ["{{baseUrl}}"], "path": ["transactions", "1"]}
+					}
+				},
+				{
+					"name": "Get wallet stats (for fraud)",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/transactions/stats/5", "host": ["{{baseUrl}}"], "path": ["transactions", "stats", "5"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "📚 Accounting",
+			"item": [
+				{
+					"name": "Get journal entries (paginated)",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/accounting/journal-entries?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["accounting", "journal-entries"], "query": [{"key": "page", "value": "0"}, {"key": "size", "value": "20"}]}
+					}
+				},
+				{
+					"name": "Get journal entries by date range",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/accounting/journal-entries?fromDate=2026-06-01&toDate=2026-06-30&page=0&size=20", "host": ["{{baseUrl}}"], "path": ["accounting", "journal-entries"], "query": [{"key": "fromDate", "value": "2026-06-01"}, {"key": "toDate", "value": "2026-06-30"}, {"key": "page", "value": "0"}, {"key": "size", "value": "20"}]}
+					}
+				},
+				{
+					"name": "Get journal entries by type",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/accounting/journal-entries?type=CHUYEN_DIEM&page=0&size=20", "host": ["{{baseUrl}}"], "path": ["accounting", "journal-entries"], "query": [{"key": "type", "value": "CHUYEN_DIEM"}, {"key": "page", "value": "0"}, {"key": "size", "value": "20"}]}
+					}
+				},
+				{
+					"name": "Export journal entries (CSV)",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/accounting/journal-entries/export", "host": ["{{baseUrl}}"], "path": ["accounting", "journal-entries", "export"]}
+					}
+				},
+				{
+					"name": "ERP Transfer (kết chuyển)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"date\": \"2026-06-14\"\n}"},
+						"url": {"raw": "{{baseUrl}}/accounting/erp-transfer", "host": ["{{baseUrl}}"], "path": ["accounting", "erp-transfer"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "🛡️ Fraud Detection",
+			"item": [
+				{
+					"name": "Check transaction (normal - pass)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"walletId\": 1,\n  \"amount\": 5000,\n  \"dailyTransactionCount\": 3,\n  \"dailyTotalAmount\": 15000,\n  \"transactionsInLastMinute\": 1,\n  \"averageTransactionAmount\": 5000\n}"},
+						"url": {"raw": "{{baseUrl}}/fraud/check", "host": ["{{baseUrl}}"], "path": ["fraud", "check"]}
+					}
+				},
+				{
+					"name": "Check transaction (amount exceeded - fraud)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"walletId\": 1,\n  \"amount\": 60000000,\n  \"dailyTransactionCount\": 1,\n  \"dailyTotalAmount\": 0,\n  \"transactionsInLastMinute\": 0,\n  \"averageTransactionAmount\": 5000\n}"},
+						"url": {"raw": "{{baseUrl}}/fraud/check", "host": ["{{baseUrl}}"], "path": ["fraud", "check"]}
+					}
+				},
+				{
+					"name": "Check transaction (velocity - fraud)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"walletId\": 1,\n  \"amount\": 1000,\n  \"dailyTransactionCount\": 5,\n  \"dailyTotalAmount\": 5000,\n  \"transactionsInLastMinute\": 15,\n  \"averageTransactionAmount\": 1000\n}"},
+						"url": {"raw": "{{baseUrl}}/fraud/check", "host": ["{{baseUrl}}"], "path": ["fraud", "check"]}
+					}
+				},
+				{
+					"name": "Check transaction (anomaly - fraud)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"walletId\": 1,\n  \"amount\": 20000000,\n  \"dailyTransactionCount\": 1,\n  \"dailyTotalAmount\": 0,\n  \"transactionsInLastMinute\": 0,\n  \"averageTransactionAmount\": 5000\n}"},
+						"url": {"raw": "{{baseUrl}}/fraud/check", "host": ["{{baseUrl}}"], "path": ["fraud", "check"]}
+					}
+				},
+				{
+					"name": "Get fraud config",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/admin/fraud-config", "host": ["{{baseUrl}}"], "path": ["admin", "fraud-config"]}
+					}
+				},
+				{
+					"name": "Update fraud config",
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"ruleName\": \"max_transaction_amount\",\n  \"value\": \"50000000\"\n}"},
+						"url": {"raw": "{{baseUrl}}/admin/fraud-config/1", "host": ["{{baseUrl}}"], "path": ["admin", "fraud-config", "1"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "🏪 Refund (Hoàn điểm)",
+			"item": [
+				{
+					"name": "Create refund request",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"transactionId\": \"1\",\n  \"walletId\": 3,\n  \"amount\": 0,\n  \"reason\": \"Khách hàng đổi ý\",\n  \"requestedBy\": \"pos\"\n}"},
+						"url": {"raw": "{{baseUrl}}/payments/refund-request", "host": ["{{baseUrl}}"], "path": ["payments", "refund-request"]}
+					}
+				},
+				{
+					"name": "Get pending refund requests",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/payments/refund-requests/pending", "host": ["{{baseUrl}}"], "path": ["payments", "refund-requests", "pending"]}
+					}
+				},
+				{
+					"name": "Approve refund",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"approvedBy\": \"quanly\"\n}"},
+						"url": {"raw": "{{baseUrl}}/payments/refund-requests/1/approve", "host": ["{{baseUrl}}"], "path": ["payments", "refund-requests", "1", "approve"]}
+					}
+				},
+				{
+					"name": "Reject refund",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"rejectedBy\": \"quanly\"\n}"},
+						"url": {"raw": "{{baseUrl}}/payments/refund-requests/1/reject", "host": ["{{baseUrl}}"], "path": ["payments", "refund-requests", "1", "reject"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "👥 Admin - Users & Wallets",
+			"item": [
+				{
+					"name": "Get all wallets (admin)",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/admin/wallets?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["admin", "wallets"], "query": [{"key": "page", "value": "0"}, {"key": "size", "value": "20"}]}
+					}
+				},
+				{
+					"name": "Get wallets by branch",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/admin/wallets?branchId=2&page=0&size=20", "host": ["{{baseUrl}}"], "path": ["admin", "wallets"], "query": [{"key": "branchId", "value": "2"}, {"key": "page", "value": "0"}, {"key": "size", "value": "20"}]}
+					}
+				},
+				{
+					"name": "Get all transactions (admin)",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/admin/transactions?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["admin", "transactions"], "query": [{"key": "page", "value": "0"}, {"key": "size", "value": "10"}]}
+					}
+				},
+				{
+					"name": "Get user tracking",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{baseUrl}}/admin/tracking/activities?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["admin", "tracking", "activities"], "query": [{"key": "page", "value": "0"}, {"key": "size", "value": "20"}]}
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,5 +1,6 @@
 com\hust\thailq\payment\PaymentManagementApplication.class
 com\hust\thailq\payment\service\PaymentService.class
+com\hust\thailq\payment\client\FraudClient.class
 com\hust\thailq\payment\client\TransactionClient.class
 com\hust\thailq\payment\dto\request\RedeemRequest.class
 com\hust\thailq\payment\dto\response\CommandResponse$CommandResponseBuilder.class
@@ -7,7 +8,10 @@ com\hust\thailq\payment\client\WalletClient.class
 com\hust\thailq\payment\dto\request\TransactionRequest.class
 com\hust\thailq\payment\dto\response\CommandResponse.class
 com\hust\thailq\payment\config\AppConfig.class
+com\hust\thailq\payment\controller\RefundController.class
 com\hust\thailq\payment\controller\RewardController.class
+com\hust\thailq\payment\repository\RefundRequestRepository.class
 com\hust\thailq\payment\dto\response\WalletResponse.class
 com\hust\thailq\payment\controller\PaymentController.class
+com\hust\thailq\payment\domain\entity\RefundRequest.class
 com\hust\thailq\payment\dto\request\BalanceUpdateRequest.class

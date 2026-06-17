@@ -19,4 +19,5 @@ public class JwtResponse {
     private String firstName;
     private String lastName;
     private List<String> roles;
+    private Long branchId;
 }

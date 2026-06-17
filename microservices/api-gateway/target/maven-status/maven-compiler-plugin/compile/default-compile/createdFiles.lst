@@ -1,2 +1,4 @@
 com\hust\thailq\gateway\ApiGatewayApplication.class
+com\hust\thailq\gateway\config\RateLimitConfig.class
 com\hust\thailq\gateway\config\CorsConfig.class
+com\hust\thailq\gateway\filter\JwtAuthFilter.class

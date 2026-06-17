@@ -28,6 +28,7 @@ import TextField from '@mui/material/TextField';
 import Iconify from '../../components/iconify';
 import Scrollbar from '../../components/scrollbar';
 import HttpService from '../../services/HttpService';
+import AuthService from '../../services/AuthService';
 import WalletListHead from '../wallet/WalletListHead';
 import { fCurrency } from '../../utils/formatNumber';
 import Label from '../../components/label';
@@ -124,7 +125,17 @@ export default function AdminWallet() {
   }, []);
 
   const fetchData = () => {
-    HttpService.getWithAuth('/admin/wallets')
+    const user = AuthService.getCurrentUser();
+    const roles = (user?.roles || []).map(r => typeof r === 'string' ? r : r.name);
+    const isAdminOrAccountant = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_ACCOUNTANT');
+    const branchId = user?.branchId;
+
+    // Admin + Kế toán: xem tất cả. Manager/Cashier: chỉ xem ví chi nhánh mình
+    const url = isAdminOrAccountant
+      ? '/admin/wallets'
+      : `/admin/wallets?branchId=${branchId}`;
+
+    HttpService.getWithAuth(url)
       .then((response) => {
         setData(response.content);
       })

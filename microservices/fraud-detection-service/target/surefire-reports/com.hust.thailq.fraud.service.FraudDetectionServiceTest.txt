@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.hust.thailq.fraud.service.FraudDetectionServiceTest
--------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.103 s -- in com.hust.thailq.fraud.service.FraudDetectionServiceTest

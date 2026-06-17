@@ -1,5 +1,10 @@
 server:
   port: 8086
+  tomcat:
+    threads:
+      max: 400
+    max-connections: 2000
+    accept-count: 200
 
 spring:
   application:

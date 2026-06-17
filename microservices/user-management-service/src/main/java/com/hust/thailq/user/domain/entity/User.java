@@ -49,6 +49,9 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
+    @Column(name = "branch_id")
+    private Long branchId;
+
     public void addRole(Role role) {
         roles.add(role);
         role.getUsers().add(this);

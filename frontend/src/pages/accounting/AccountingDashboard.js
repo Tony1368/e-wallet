@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Container, Card, CardContent, Typography, Button, Stack, Grid, Table, TableHead,
   TableRow, TableCell, TableBody, TableContainer, TextField, LinearProgress, Box,
-  Alert, Chip, Paper, TablePagination
+  Alert, Chip, Paper, TablePagination, MenuItem, Select, FormControl, InputLabel
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import HttpService from '../../services/HttpService';
@@ -17,10 +17,12 @@ export default function AccountingDashboard() {
   // Ledger state
   const [entries, setEntries] = useState([]);
   const [ledgerLoading, setLedgerLoading] = useState(false);
-  const [filterDate, setFilterDate] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [totalElements, setTotalElements] = useState(0);
+  const [typeFilter, setTypeFilter] = useState('');
 
   useEffect(() => {
     loadLedgerEntries();
@@ -29,7 +31,15 @@ export default function AccountingDashboard() {
   const loadLedgerEntries = async () => {
     setLedgerLoading(true);
     try {
-      const params = `?page=${page}&size=${rowsPerPage}${filterDate ? `&date=${filterDate}` : ''}`;
+      let params = `?page=${page}&size=${rowsPerPage}`;
+      if (fromDate && toDate) {
+        params += `&fromDate=${fromDate}&toDate=${toDate}`;
+      } else if (fromDate) {
+        params += `&date=${fromDate}`;
+      }
+      if (typeFilter) {
+        params += `&type=${typeFilter}`;
+      }
       const res = await HttpService.getWithAuth(`/accounting/journal-entries${params}`);
       setEntries(Array.isArray(res) ? res : (res?.content || []));
       setTotalElements(res?.totalElements || (Array.isArray(res) ? res.length : 0));
@@ -55,12 +65,16 @@ export default function AccountingDashboard() {
     formData.append('file', file);
 
     try {
-      // Simulate progress for UX
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 500);
 
-      const res = await HttpService.postWithAuth('/wallets/batch-credit', formData);
+      const user = JSON.parse(localStorage.getItem('user'));
+      const res = await (await fetch('http://localhost:8080/api/v1/wallets/batch-credit', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${user?.token}` },
+        body: formData
+      })).json();
 
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -73,14 +87,31 @@ export default function AccountingDashboard() {
     }
   };
 
-  const handleExportExcel = () => {
-    window.open(`http://localhost:8080/api/v1/accounting/journal-entries/export?date=${filterDate}`, '_blank');
+  const handleExportExcel = async () => {
+    try {
+      let params = '';
+      if (fromDate && toDate) params = `?fromDate=${fromDate}&toDate=${toDate}`;
+      else if (fromDate) params = `?date=${fromDate}`;
+      const response = await fetch(`http://localhost:8080/api/v1/accounting/journal-entries/export${params}`, {
+        headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}` }
+      });
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'journal_entries.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Lỗi xuất file: ' + err.message);
+    }
   };
 
   const handleErpTransfer = async () => {
-    if (!filterDate) return;
+    if (!fromDate) return;
     try {
-      const res = await HttpService.postWithAuth('/accounting/erp-transfer', { date: filterDate });
+      const res = await HttpService.postWithAuth('/accounting/erp-transfer', { date: fromDate });
       alert(`Kết chuyển ERP thành công! Số bút toán: ${res.transferredCount}, Ngày: ${res.date}`);
       loadLedgerEntries();
     } catch (err) {
@@ -88,9 +119,17 @@ export default function AccountingDashboard() {
     }
   };
 
-  const handleFilterByDate = () => {
+  const handleFilter = () => {
     setPage(0);
     loadLedgerEntries();
+  };
+
+  const handleClearFilter = () => {
+    setFromDate('');
+    setToDate('');
+    setTypeFilter('');
+    setPage(0);
+    setTimeout(loadLedgerEntries, 0);
   };
 
   return (
@@ -100,7 +139,7 @@ export default function AccountingDashboard() {
       </Helmet>
       <Container maxWidth="xl">
         <Typography variant="h4" sx={{ mb: 3 }}>
-          Cổng Kế toán & Quản trị
+          Cổng Kế toán &amp; Quản trị
         </Typography>
 
         <Grid container spacing={3}>
@@ -116,6 +155,27 @@ export default function AccountingDashboard() {
                 </Typography>
 
                 <Stack spacing={2}>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('http://localhost:8080/api/v1/wallets/batch-credit/template', {
+                          headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}` }
+                        });
+                        const blob = await res.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'batch_credit_template.xlsx';
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                      } catch (err) { alert('Lỗi tải template'); }
+                    }}
+                  >
+                    📥 Tải file mẫu (template)
+                  </Button>
+
                   <Button variant="outlined" component="label" fullWidth>
                     {file ? file.name : 'Chọn file Excel/CSV'}
                     <input type="file" hidden accept=".xlsx,.xls,.csv" onChange={handleFileChange} />
@@ -150,27 +210,53 @@ export default function AccountingDashboard() {
           <Grid item xs={12} md={8}>
             <Card>
               <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                  <Typography variant="h6">Bút toán (Ledger)</Typography>
-                  <Stack direction="row" spacing={1}>
-                    <TextField
-                      type="date"
-                      size="small"
-                      value={filterDate}
-                      onChange={(e) => setFilterDate(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                      label="Lọc theo ngày"
-                    />
-                    <Button variant="outlined" size="small" onClick={handleFilterByDate}>
-                      Lọc
-                    </Button>
-                    <Button variant="outlined" size="small" color="success" onClick={handleExportExcel}>
-                      Xuất Excel
-                    </Button>
-                    <Button variant="outlined" size="small" color="secondary" onClick={handleErpTransfer} disabled={!filterDate}>
-                      Kết chuyển ERP
-                    </Button>
-                  </Stack>
+                <Typography variant="h6" sx={{ mb: 2 }}>Bút toán (Ledger)</Typography>
+
+                {/* Filter */}
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }} flexWrap="wrap">
+                  <TextField
+                    type="date"
+                    size="small"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    label="Từ ngày"
+                    sx={{ width: 160 }}
+                  />
+                  <TextField
+                    type="date"
+                    size="small"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    label="Đến ngày"
+                    sx={{ width: 160 }}
+                  />
+                  <FormControl size="small" sx={{ minWidth: 140 }}>
+                    <InputLabel>Loại GD</InputLabel>
+                    <Select value={typeFilter} label="Loại GD" onChange={(e) => setTypeFilter(e.target.value)}>
+                      <MenuItem value="">Tất cả</MenuItem>
+                      <MenuItem value="CHUYEN_DIEM">Chuyển điểm</MenuItem>
+                      <MenuItem value="NAP_DIEM">Nạp điểm</MenuItem>
+                      <MenuItem value="RUT_DIEM">Rút điểm</MenuItem>
+                      <MenuItem value="DOI_THUONG">Đổi thưởng</MenuItem>
+                      <MenuItem value="HOAN_DIEM">Hoàn điểm</MenuItem>
+                      <MenuItem value="CAP_DIEM_BATCH">Cấp điểm batch</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Button variant="contained" size="small" onClick={handleFilter}>
+                    Lọc
+                  </Button>
+                  <Button variant="text" size="small" onClick={handleClearFilter}>
+                    Xóa lọc
+                  </Button>
+                  <Box sx={{ flex: 1 }} />
+                  <Button variant="outlined" size="small" color="success" onClick={handleExportExcel}>
+                    Xuất Excel
+                  </Button>
+                  <Button variant="outlined" size="small" color="secondary" onClick={handleErpTransfer} disabled={!fromDate}>
+                    Kết chuyển ERP
+                  </Button>
                 </Stack>
 
                 {ledgerLoading && <LinearProgress sx={{ mb: 1 }} />}
@@ -181,7 +267,8 @@ export default function AccountingDashboard() {
                       <TableRow>
                         <TableCell>ID</TableCell>
                         <TableCell>Mã GD</TableCell>
-                        <TableCell>Loại</TableCell>
+                        <TableCell>Loại bút toán</TableCell>
+                        <TableCell>Loại GD</TableCell>
                         <TableCell>Từ ví</TableCell>
                         <TableCell>Đến ví</TableCell>
                         <TableCell align="right">Số tiền</TableCell>
@@ -205,6 +292,11 @@ export default function AccountingDashboard() {
                               sx={{ fontSize: '0.7rem' }}
                             />
                           </TableCell>
+                          <TableCell>
+                            <Typography variant="caption">
+                              {entry.transactionType || '-'}
+                            </Typography>
+                          </TableCell>
                           <TableCell>{entry.fromWalletId}</TableCell>
                           <TableCell>{entry.toWalletId}</TableCell>
                           <TableCell align="right">
@@ -215,7 +307,7 @@ export default function AccountingDashboard() {
                       ))}
                       {entries.length === 0 && !ledgerLoading && (
                         <TableRow>
-                          <TableCell colSpan={7} align="center">
+                          <TableCell colSpan={8} align="center">
                             <Typography variant="body2" color="text.secondary">Chưa có bút toán nào</Typography>
                           </TableCell>
                         </TableRow>

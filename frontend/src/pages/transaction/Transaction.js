@@ -83,24 +83,28 @@ export default function Transaction() {
     fetchData();
   }, []);
 
-  const fetchData = () => {
-    const userId = AuthService.getCurrentUser()?.id;
-    HttpService.getWithAuth(`/transactions/users/${userId}`)
-//  HttpService.getWithAuth(`/transaction/hust/transactions/users/${userId}`)
-      .then((response) => {
-        setData(response.content);
-      })
-      .catch((error) => {
-        if (error?.response?.status === 401) {
-          navigate('/login');
-        } else if (error.response?.data?.errors) {
-          error.response?.data?.errors.map((e) => enqueueSnackbar(e.message, { variant: 'error' }));
-        } else if (error.response?.data?.message) {
-          enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
-        } else {
-          enqueueSnackbar(error.message, { variant: 'error' });
-        }
-      });
+  const fetchData = async () => {
+    try {
+      const userId = AuthService.getCurrentUser()?.id;
+      // Lấy danh sách ví của user
+      const wallets = await HttpService.getWithAuth(`/wallets/users/${userId}`);
+      const walletIds = wallets?.map(w => w.id) || [];
+      if (walletIds.length === 0) {
+        setData([]);
+        return;
+      }
+      // Query giao dịch theo tất cả walletIds
+      const response = await HttpService.getWithAuth(`/transactions/wallets?ids=${walletIds.join(',')}`);
+      setData(response.content || []);
+    } catch (error) {
+      if (error?.response?.status === 401) {
+        navigate('/login');
+      } else if (error.response?.data?.message) {
+        enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
+      } else {
+        enqueueSnackbar(error.message, { variant: 'error' });
+      }
+    }
   };
 
   return (
@@ -129,8 +133,14 @@ export default function Transaction() {
                           <TableCell align="left" sx={{ paddingLeft: 5 }}>
                             {id}
                           </TableCell>
-                          <TableCell align="left">{`${fromWallet.user.firstName} ${fromWallet.user.lastName}`}</TableCell>
-                          <TableCell align="left">{`${toWallet.user.firstName} ${toWallet.user.lastName}`}</TableCell>
+                          <TableCell align="left">
+                            {fromWallet?.name || `Ví #${fromWallet?.id}`}
+                            {fromWallet?.iban && <><br/><span style={{fontSize:'0.75em',color:'#888'}}>{fromWallet.iban.slice(0,4)}***{fromWallet.iban.slice(-4)}</span></>}
+                          </TableCell>
+                          <TableCell align="left">
+                            {toWallet?.name || `Ví #${toWallet?.id}`}
+                            {toWallet?.iban && <><br/><span style={{fontSize:'0.75em',color:'#888'}}>{toWallet.iban.slice(0,4)}***{toWallet.iban.slice(-4)}</span></>}
+                          </TableCell>
                           <TableCell align="right">
                             {(() => {
                               const formatted = fCurrency(amount);

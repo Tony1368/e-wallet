@@ -17,4 +17,5 @@ public class TransactionCompletedEvent {
     private Long fromWalletId;
     private Long toWalletId;
     private String description;
+    private Long typeId;
 }

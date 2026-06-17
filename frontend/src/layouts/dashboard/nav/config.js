@@ -30,7 +30,7 @@ const navConfig = [
     roles: ['ROLE_USER', 'ROLE_CUSTOMER'],
   },
   {
-    title: 'Giả lập POS',
+    title: 'Thu ngân POS',
     path: '/pos',
     icon: icon('ic_transfer'),
     roles: ['ROLE_ADMIN', 'ROLE_CASHIER'],

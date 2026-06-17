@@ -3,6 +3,7 @@ D:\SourceCode\e-wallet\microservices\common-service\src\main\java\com\hust\thail
 D:\SourceCode\e-wallet\microservices\common-service\src\main\java\com\hust\thailq\dto\CommandResponse.java
 D:\SourceCode\e-wallet\microservices\common-service\src\main\java\com\hust\thailq\exception\ElementAlreadyExistsException.java
 D:\SourceCode\e-wallet\microservices\common-service\src\main\java\com\hust\thailq\exception\ErrorResponse.java
+D:\SourceCode\e-wallet\microservices\common-service\src\main\java\com\hust\thailq\exception\GlobalExceptionHandler.java
 D:\SourceCode\e-wallet\microservices\common-service\src\main\java\com\hust\thailq\exception\InsufficientFundsException.java
 D:\SourceCode\e-wallet\microservices\common-service\src\main\java\com\hust\thailq\exception\NoSuchElementFoundException.java
 D:\SourceCode\e-wallet\microservices\common-service\src\main\java\com\hust\thailq\exception\ServiceCommunicationException.java

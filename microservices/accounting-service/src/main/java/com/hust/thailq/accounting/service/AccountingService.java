@@ -26,7 +26,11 @@ public class AccountingService {
     @KafkaListener(topics = "transaction-events", groupId = "accounting-group")
     @Transactional
     public void handleTransactionCompleted(TransactionCompletedEvent event) {
-        log.info("Received TransactionCompletedEvent: transactionId={}", event.getTransactionId());
+        if (event == null || event.getTransactionId() == null) {
+            log.warn("Received null or invalid TransactionCompletedEvent, skipping");
+            return;
+        }
+        log.info("Received TransactionCompletedEvent: transactionId={}, amount={}", event.getTransactionId(), event.getAmount());
 
         Ledger ledger = ledgerRepository.findByName(DEFAULT_LEDGER)
                 .orElseGet(() -> {
@@ -35,6 +39,8 @@ public class AccountingService {
                     newLedger.setDescription("General Ledger");
                     return ledgerRepository.save(newLedger);
                 });
+
+        String txType = resolveTransactionType(event.getTypeId());
 
         // Debit entry (from wallet)
         JournalEntry debit = new JournalEntry();
@@ -45,6 +51,7 @@ public class AccountingService {
         debit.setAmount(event.getAmount());
         debit.setEntryType("DEBIT");
         debit.setDescription(event.getDescription());
+        debit.setTransactionType(txType);
 
         // Credit entry (to wallet)
         JournalEntry credit = new JournalEntry();
@@ -55,6 +62,7 @@ public class AccountingService {
         credit.setAmount(event.getAmount());
         credit.setEntryType("CREDIT");
         credit.setDescription(event.getDescription());
+        credit.setTransactionType(txType);
 
         journalEntryRepository.saveAll(List.of(debit, credit));
         log.info("Journal entries created for transactionId={}", event.getTransactionId());
@@ -63,5 +71,17 @@ public class AccountingService {
     @Transactional(readOnly = true)
     public List<JournalEntry> findByTransactionId(UUID transactionId) {
         return journalEntryRepository.findByTransactionId(transactionId);
+    }
+    private String resolveTransactionType(Long typeId) {
+        if (typeId == null) return "KHAC";
+        return switch (typeId.intValue()) {
+            case 1 -> "CHUYEN_DIEM";
+            case 4 -> "NAP_DIEM";
+            case 5 -> "RUT_DIEM";
+            case 6 -> "DOI_THUONG";
+            case 7 -> "HOAN_DIEM";
+            case 8 -> "CAP_DIEM_BATCH";
+            default -> "KHAC";
+        };
     }
 }

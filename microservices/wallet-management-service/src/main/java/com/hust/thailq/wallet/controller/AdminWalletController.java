@@ -16,7 +16,11 @@ public class AdminWalletController {
     private final WalletService walletService;
 
     @GetMapping
-    public ResponseEntity<Page<WalletResponse>> findAll(Pageable pageable) {
+    public ResponseEntity<Page<WalletResponse>> findAll(Pageable pageable,
+            @RequestParam(required = false) Long branchId) {
+        if (branchId != null) {
+            return ResponseEntity.ok(walletService.findByBranchId(branchId, pageable));
+        }
         return ResponseEntity.ok(walletService.findAll(pageable));
     }
 }

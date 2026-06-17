@@ -20,4 +20,5 @@ public class WalletResponse {
     private String createdAt;
     private String bankInfo;
     private WalletStatus status;
+    private Long branchId;
 }

@@ -1,11 +1,34 @@
 server:
   port: 8080
+  netty:
+    connection-timeout: 30000
+    idle-timeout: 30000
+
+jwt:
+  secret: ${JWT_SECRET:YourSecretKeyForJWTTokenGenerationAndValidation}
 
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 30s
+        pool:
+          max-connections: 500
+          acquire-timeout: 10000
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 50
+            redis-rate-limiter.burstCapacity: 100
+            redis-rate-limiter.requestedTokens: 1
+            key-resolver: "#{@ipKeyResolver}"
       routes:
         - id: user-auth
           uri: ${USER_SERVICE_URL}

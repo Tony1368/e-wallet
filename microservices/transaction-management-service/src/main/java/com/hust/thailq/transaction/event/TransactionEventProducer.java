@@ -14,7 +14,19 @@ public class TransactionEventProducer {
     private static final String TOPIC = "transaction-events";
 
     public void publishTransactionCompleted(TransactionCompletedEvent event) {
-        kafkaTemplate.send(TOPIC, event.getTransactionId().toString(), event);
-        log.info("Published TransactionCompletedEvent: transactionId={}", event.getTransactionId());
+        try {
+            kafkaTemplate.send(TOPIC, event.getTransactionId().toString(), event)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error("Failed to publish TransactionCompletedEvent: transactionId={}, error={}",
+                                    event.getTransactionId(), ex.getMessage());
+                        } else {
+                            log.info("Published TransactionCompletedEvent: transactionId={}, offset={}",
+                                    event.getTransactionId(), result.getRecordMetadata().offset());
+                        }
+                    });
+        } catch (Exception e) {
+            log.error("Kafka unavailable, event lost: tx={}, error={}", event.getTransactionId(), e.getMessage());
+        }
     }
 }

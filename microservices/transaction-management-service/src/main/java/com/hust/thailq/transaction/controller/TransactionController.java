@@ -6,12 +6,12 @@ import com.hust.thailq.transaction.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -32,8 +32,13 @@ public class TransactionController {
     }
 
     @GetMapping("/users/{userId}")
-    public ResponseEntity<Page<TransactionResponse>> findAllByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(new PageImpl<>(transactionService.findAllByUserId(userId)));
+    public ResponseEntity<Page<TransactionResponse>> findAllByUserId(@PathVariable Long userId, Pageable pageable) {
+        return ResponseEntity.ok(transactionService.findAllByUserId(userId, pageable));
+    }
+
+    @GetMapping("/wallets")
+    public ResponseEntity<Page<TransactionResponse>> findByWalletIds(@RequestParam List<Long> ids, Pageable pageable) {
+        return ResponseEntity.ok(transactionService.findByWalletIds(ids, pageable));
     }
 
     @GetMapping
@@ -45,5 +50,10 @@ public class TransactionController {
     public ResponseEntity<TransactionResponse> create(@Valid @RequestBody TransactionRequest request) {
         TransactionResponse response = transactionService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/stats/{walletId}")
+    public ResponseEntity<java.util.Map<String, Object>> getWalletStats(@PathVariable Long walletId) {
+        return ResponseEntity.ok(transactionService.getWalletStats(walletId));
     }
 }

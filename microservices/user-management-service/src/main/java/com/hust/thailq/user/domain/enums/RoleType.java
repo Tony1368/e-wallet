@@ -10,7 +10,9 @@ public enum RoleType {
     ROLE_USER("User"),
     ROLE_ADMIN("Admin"),
     ROLE_ACCOUNTANT("Accountant"),
-    ROLE_CUSTOMER("Customer");
+    ROLE_CUSTOMER("Customer"),
+    ROLE_MANAGER("Manager"),
+    ROLE_CASHIER("Cashier");
 
     private String label;
 }

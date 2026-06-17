@@ -1,3 +1,4 @@
+com\hust\thailq\wallet\controller\WalletController$1.class
 com\hust\thailq\wallet\dto\response\CommandResponse$CommandResponseBuilder.class
 com\hust\thailq\wallet\domain\entity\Wallet.class
 com\hust\thailq\wallet\domain\enums\WalletStatus.class
