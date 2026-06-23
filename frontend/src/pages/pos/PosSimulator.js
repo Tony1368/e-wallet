@@ -37,6 +37,10 @@ export default function PosSimulator() {
   const [refundLoading, setRefundLoading] = useState(false);
   const [refundResult, setRefundResult] = useState(null);
 
+  // Thanh toán thành công dialog
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [successData, setSuccessData] = useState(null);
+
   // Tải ví cửa hàng khi khởi tạo
   useEffect(() => {
     const loadStoreWallets = async () => {
@@ -106,6 +110,8 @@ export default function PosSimulator() {
         typeId: 1,
       });
       setPaymentResult({ success: true, data: response });
+      setSuccessData(response);
+      setSuccessDialogOpen(true);
       // Cập nhật số dư khách hàng
       try {
         const updated = await HttpService.getWithAuth(`/wallets/iban/${selectedCustomerWallet.iban}`);
@@ -353,6 +359,30 @@ export default function PosSimulator() {
             </Grid>
           </CardContent>
         </Card>
+
+        {/* Dialog thanh toán thành công */}
+        <Dialog open={successDialogOpen} onClose={() => setSuccessDialogOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle sx={{ textAlign: 'center', color: 'success.main' }}>
+            ✅ Thanh toán thành công!
+          </DialogTitle>
+          <DialogContent sx={{ textAlign: 'center', py: 3 }}>
+            <Typography variant="h4" color="success.main" sx={{ mb: 2 }}>
+              {amount ? Number(amount).toLocaleString('vi-VN') + ' đ' : ''}
+            </Typography>
+            <Typography variant="body1">Mã giao dịch: <strong>{successData?.id || 'N/A'}</strong></Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {description || 'Thanh toán POS'}
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+            <Button variant="contained" color="success" onClick={() => { setSuccessDialogOpen(false); handleReset(); }}>
+              Giao dịch mới
+            </Button>
+            <Button variant="outlined" onClick={() => setSuccessDialogOpen(false)}>
+              Tiếp tục thu
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Dialog xác nhận hoàn điểm */}
         <Dialog open={refundDialogOpen} onClose={() => setRefundDialogOpen(false)}>

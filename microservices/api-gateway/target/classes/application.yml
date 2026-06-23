@@ -18,17 +18,11 @@ spring:
     gateway:
       httpclient:
         connect-timeout: 10000
-        response-timeout: 30s
+        response-timeout: 60s
         pool:
-          max-connections: 500
-          acquire-timeout: 10000
-      default-filters:
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter.replenishRate: 50
-            redis-rate-limiter.burstCapacity: 100
-            redis-rate-limiter.requestedTokens: 1
-            key-resolver: "#{@ipKeyResolver}"
+          max-connections: 1000
+          acquire-timeout: 20000
+      default-filters: []
       routes:
         - id: user-auth
           uri: ${USER_SERVICE_URL:http://localhost:8081}

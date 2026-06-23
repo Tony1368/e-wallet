@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Utility class for Jwt related tasks.
@@ -36,8 +37,13 @@ public class JwtUtils {
 
     public String generateJwtToken(Authentication authentication) {
         final UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userPrincipal.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .toList();
         return Jwts.builder()
                 .subject(userPrincipal.getUsername())
+                .claim("roles", roles)
+                .claim("userId", userPrincipal.getId())
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(getSigningKey())

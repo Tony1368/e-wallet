@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -18,8 +19,29 @@ public class FraudDetectionService {
 
     private final FraudRuleConfigRepository ruleConfigRepository;
 
+    // Cache config trong memory, refresh mỗi 30 giây
+    private final AtomicReference<List<FraudRuleConfig>> cachedRules = new AtomicReference<>();
+    private volatile long lastFetchTime = 0;
+    private static final long CACHE_TTL_MS = 30_000; // 30 seconds
+
+    private List<FraudRuleConfig> getActiveRules() {
+        long now = System.currentTimeMillis();
+        if (now - lastFetchTime > CACHE_TTL_MS || cachedRules.get() == null) {
+            cachedRules.set(ruleConfigRepository.findByEnabledTrue());
+            lastFetchTime = now;
+            log.debug("Fraud rules cache refreshed");
+        }
+        return cachedRules.get();
+    }
+
+    public void invalidateCache() {
+        cachedRules.set(null);
+        lastFetchTime = 0;
+        log.info("Fraud rules cache invalidated");
+    }
+
     public FraudCheckResponse checkTransaction(FraudCheckRequest request) {
-        List<FraudRuleConfig> rules = ruleConfigRepository.findByEnabledTrue();
+        List<FraudRuleConfig> rules = getActiveRules();
 
         for (FraudRuleConfig rule : rules) {
 

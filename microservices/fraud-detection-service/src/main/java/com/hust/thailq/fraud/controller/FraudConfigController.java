@@ -2,6 +2,7 @@ package com.hust.thailq.fraud.controller;
 
 import com.hust.thailq.fraud.domain.entity.FraudRuleConfig;
 import com.hust.thailq.fraud.repository.FraudRuleConfigRepository;
+import com.hust.thailq.fraud.service.FraudDetectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.*;
 public class FraudConfigController {
 
     private final FraudRuleConfigRepository ruleConfigRepository;
+    private final FraudDetectionService fraudDetectionService;
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllConfigs() {
@@ -78,6 +80,7 @@ public class FraudConfigController {
         }
 
         ruleConfigRepository.save(config);
+        fraudDetectionService.invalidateCache();
         return ResponseEntity.noContent().build();
     }
 

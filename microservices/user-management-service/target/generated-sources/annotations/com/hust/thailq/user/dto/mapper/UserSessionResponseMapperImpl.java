@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-17T21:26:39+0700",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.0.v20260407-0427, environment: Java 21.0.10 (Eclipse Adoptium)"
+    date = "2026-06-19T08:55:12+0700",
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Oracle Corporation)"
 )
 @Component
 public class UserSessionResponseMapperImpl implements UserSessionResponseMapper {
@@ -26,20 +26,20 @@ public class UserSessionResponseMapperImpl implements UserSessionResponseMapper 
         UserSessionResponse userSessionResponse = new UserSessionResponse();
 
         userSessionResponse.setUser( userResponseMapper.toDto( entity.getUser() ) );
-        userSessionResponse.setBrowser( entity.getBrowser() );
-        userSessionResponse.setCity( entity.getCity() );
-        userSessionResponse.setCountry( entity.getCountry() );
-        userSessionResponse.setDeviceType( entity.getDeviceType() );
         userSessionResponse.setId( entity.getId() );
+        userSessionResponse.setSessionId( entity.getSessionId() );
         userSessionResponse.setIpAddress( entity.getIpAddress() );
-        userSessionResponse.setIsActive( entity.getIsActive() );
+        userSessionResponse.setUserAgent( entity.getUserAgent() );
+        userSessionResponse.setDeviceType( entity.getDeviceType() );
+        userSessionResponse.setBrowser( entity.getBrowser() );
+        userSessionResponse.setOperatingSystem( entity.getOperatingSystem() );
+        userSessionResponse.setCountry( entity.getCountry() );
+        userSessionResponse.setCity( entity.getCity() );
+        userSessionResponse.setRegion( entity.getRegion() );
         userSessionResponse.setLatitude( entity.getLatitude() );
         userSessionResponse.setLongitude( entity.getLongitude() );
-        userSessionResponse.setOperatingSystem( entity.getOperatingSystem() );
-        userSessionResponse.setRegion( entity.getRegion() );
-        userSessionResponse.setSessionId( entity.getSessionId() );
         userSessionResponse.setTimezone( entity.getTimezone() );
-        userSessionResponse.setUserAgent( entity.getUserAgent() );
+        userSessionResponse.setIsActive( entity.getIsActive() );
 
         formatTimes( userSessionResponse, entity );
 

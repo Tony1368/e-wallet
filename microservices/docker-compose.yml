@@ -122,11 +122,19 @@ services:
   redis:
     image: redis:alpine
     container_name: ewallet-redis
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --tcp-backlog 511 --timeout 0 --tcp-keepalive 300
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 640M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
     networks:
       - ewallet-network
     healthcheck:
@@ -179,6 +187,15 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_NUM_PARTITIONS: 3
       KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_HEAP_OPTS: "-Xmx1024m -Xms512m"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1536M
+        reservations:
+          cpus: '1.0'
+          memory: 768M
     networks:
       - ewallet-network
     healthcheck:
@@ -231,6 +248,15 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1280M
+        reservations:
+          cpus: '1.0'
+          memory: 512M
     depends_on:
       wallet-db:
         condition: service_healthy
@@ -257,6 +283,15 @@ services:
       WALLET_SERVICE_URL: http://wallet-service:8082
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1280M
+        reservations:
+          cpus: '1.0'
+          memory: 512M
     depends_on:
       transaction-db:
         condition: service_healthy
@@ -283,6 +318,15 @@ services:
       WALLET_SERVICE_URL: http://wallet-service:8082
       TRANSACTION_SERVICE_URL: http://transaction-service:8083
       FRAUD_SERVICE_URL: http://fraud-detection-service:8086
+      JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1280M
+        reservations:
+          cpus: '1.0'
+          memory: 512M
     depends_on:
       payment-db:
         condition: service_healthy
@@ -356,6 +400,15 @@ services:
       JWT_SECRET: ${JWT_SECRET:-YourSecretKeyForJWTTokenGenerationAndValidation}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 768M
+        reservations:
+          cpus: '1.0'
+          memory: 256M
     depends_on:
       redis:
         condition: service_healthy

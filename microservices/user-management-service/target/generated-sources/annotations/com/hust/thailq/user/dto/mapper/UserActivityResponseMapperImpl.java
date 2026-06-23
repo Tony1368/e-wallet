@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-17T21:26:39+0700",
-    comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.0.v20260407-0427, environment: Java 21.0.10 (Eclipse Adoptium)"
+    date = "2026-06-19T08:55:12+0700",
+    comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Oracle Corporation)"
 )
 @Component
 public class UserActivityResponseMapperImpl implements UserActivityResponseMapper {
@@ -29,26 +29,26 @@ public class UserActivityResponseMapperImpl implements UserActivityResponseMappe
 
         userActivityResponse.setUser( userResponseMapper.toDto( entity.getUser() ) );
         userActivityResponse.setSession( userSessionResponseMapper.toDto( entity.getSession() ) );
+        userActivityResponse.setId( entity.getId() );
         userActivityResponse.setActivityId( entity.getActivityId() );
         userActivityResponse.setActivityType( entity.getActivityType() );
-        userActivityResponse.setAmount( entity.getAmount() );
-        userActivityResponse.setBrowser( entity.getBrowser() );
-        userActivityResponse.setCity( entity.getCity() );
-        userActivityResponse.setCountry( entity.getCountry() );
         userActivityResponse.setDescription( entity.getDescription() );
-        userActivityResponse.setDeviceType( entity.getDeviceType() );
-        userActivityResponse.setErrorMessage( entity.getErrorMessage() );
+        userActivityResponse.setAmount( entity.getAmount() );
         userActivityResponse.setFromWalletIban( entity.getFromWalletIban() );
-        userActivityResponse.setId( entity.getId() );
+        userActivityResponse.setToWalletIban( entity.getToWalletIban() );
         userActivityResponse.setIpAddress( entity.getIpAddress() );
-        userActivityResponse.setIsSuccessful( entity.getIsSuccessful() );
+        userActivityResponse.setUserAgent( entity.getUserAgent() );
+        userActivityResponse.setDeviceType( entity.getDeviceType() );
+        userActivityResponse.setBrowser( entity.getBrowser() );
+        userActivityResponse.setOperatingSystem( entity.getOperatingSystem() );
+        userActivityResponse.setCountry( entity.getCountry() );
+        userActivityResponse.setCity( entity.getCity() );
+        userActivityResponse.setRegion( entity.getRegion() );
         userActivityResponse.setLatitude( entity.getLatitude() );
         userActivityResponse.setLongitude( entity.getLongitude() );
-        userActivityResponse.setOperatingSystem( entity.getOperatingSystem() );
-        userActivityResponse.setRegion( entity.getRegion() );
         userActivityResponse.setTimezone( entity.getTimezone() );
-        userActivityResponse.setToWalletIban( entity.getToWalletIban() );
-        userActivityResponse.setUserAgent( entity.getUserAgent() );
+        userActivityResponse.setIsSuccessful( entity.getIsSuccessful() );
+        userActivityResponse.setErrorMessage( entity.getErrorMessage() );
 
         formatActivityTime( userActivityResponse, entity );
 
