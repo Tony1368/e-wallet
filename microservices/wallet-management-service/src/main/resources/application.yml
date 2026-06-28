@@ -58,3 +58,5 @@ logging:
   level:
     com.hust.thailq: INFO
     io.lettuce.core: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%X{requestId:-no-trace}] %-5level [%logger{20}] - %msg%n"

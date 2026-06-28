@@ -83,31 +83,31 @@ export default function App() {
       <Route path="/" element={<PrivateRoute />}>
         <Route path="" element={<DashboardLayout />}>
           <Route path="" element={<Dashboard />}>
-            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER']} />}>
+            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_CASHIER']} />}>
               <Route index element={<Dashboard />} />
             </Route>
           </Route>
 
           <Route path="wallets" element={<PrivateRoute />}>
-            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER']} />}>
+            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_CASHIER']} />}>
               <Route index element={<Wallet />} />
             </Route>
-            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER']} />}>
+            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_CASHIER']} />}>
               <Route path="new" element={<NewWallet />} />
             </Route>
-            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER']} />}>
+            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_CASHIER']} />}>
               <Route path="addFunds" element={<AddFunds />} />
             </Route>
           </Route>
 
           <Route path="transfers" element={<PrivateRoute />}>
-            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER']} />}>
+            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_CASHIER']} />}>
               <Route index element={<BasicTabs />} />
             </Route>
           </Route>
 
           <Route path="transactions" element={<PrivateRoute />}>
-            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER']} />}>
+            <Route element={<ProtectedRoute roles={['ROLE_USER', 'ROLE_ADMIN', 'ROLE_ACCOUNTANT', 'ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_CASHIER']} />}>
               <Route index element={<Transaction />} />
             </Route>
           </Route>

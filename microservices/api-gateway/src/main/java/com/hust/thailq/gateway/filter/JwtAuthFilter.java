@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtAuthFilter implements GlobalFilter, Ordered {
@@ -36,15 +37,28 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
     /**
      * RBAC Rules: Path prefix → Required roles (any match = allowed)
+     * Paths NOT listed here are open to any authenticated user.
      */
-    private static final Map<String, List<String>> RBAC_RULES = Map.of(
-            "/api/v1/admin/wallets", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT", "ROLE_MANAGER", "ROLE_CASHIER"),
-            "/api/v1/admin/transactions", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT"),
-            "/api/v1/admin/tracking", List.of("ROLE_ADMIN"),
-            "/api/v1/admin/fraud-config", List.of("ROLE_ADMIN"),
-            "/api/v1/accounting", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT"),
-            "/api/v1/fraud", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT"),
-            "/api/v1/payments/refund-requests/", List.of("ROLE_ADMIN", "ROLE_MANAGER")
+    private static final Map<String, List<String>> RBAC_RULES = Map.ofEntries(
+            // Wallet management - all staff roles can access
+            Map.entry("/api/v1/admin/wallets", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT", "ROLE_MANAGER", "ROLE_CASHIER", "ROLE_USER")),
+            Map.entry("/api/v1/wallets", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT", "ROLE_MANAGER", "ROLE_CASHIER", "ROLE_USER")),
+            // Transaction - accountant, manager, admin
+            Map.entry("/api/v1/admin/transactions", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT", "ROLE_MANAGER")),
+            Map.entry("/api/v1/transactions", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT", "ROLE_MANAGER", "ROLE_CASHIER", "ROLE_USER")),
+            // Payment - all staff can make payments
+            Map.entry("/api/v1/payments", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT", "ROLE_MANAGER", "ROLE_CASHIER", "ROLE_USER")),
+            // Refund approval - admin, manager only
+            Map.entry("/api/v1/payments/refund-requests", List.of("ROLE_ADMIN", "ROLE_MANAGER")),
+            // Accounting - admin, accountant
+            Map.entry("/api/v1/accounting", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT")),
+            // Fraud config - admin only
+            Map.entry("/api/v1/admin/fraud-config", List.of("ROLE_ADMIN")),
+            Map.entry("/api/v1/fraud", List.of("ROLE_ADMIN", "ROLE_ACCOUNTANT")),
+            // User tracking - admin only
+            Map.entry("/api/v1/admin/tracking", List.of("ROLE_ADMIN")),
+            // Rewards - cashier, user, admin
+            Map.entry("/api/v1/rewards", List.of("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_USER"))
     );
 
     @Override
@@ -84,11 +98,18 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                         "Access denied. Required roles: " + getRequiredRoles(path) + ". Your roles: " + roles, path);
             }
 
-            // Pass user info to downstream services via internal headers
+            // Generate or propagate X-Request-Id for distributed tracing
+            String requestId = exchange.getRequest().getHeaders().getFirst("X-Request-Id");
+            if (requestId == null || requestId.isBlank()) {
+                requestId = UUID.randomUUID().toString();
+            }
+
+            // Pass user info + requestId to downstream services via internal headers
             ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                     .header("X-Auth-User", username)
                     .header("X-Auth-Roles", roles != null ? String.join(",", roles) : "")
                     .header("X-Auth-Token-Valid", "true")
+                    .header("X-Request-Id", requestId)
                     .build();
 
             return chain.filter(exchange.mutate().request(mutatedRequest).build());
@@ -100,19 +121,27 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
     /**
      * Check if user roles satisfy RBAC rules for the given path.
+     * Matches the MOST SPECIFIC rule (longest prefix match).
      * If no rule matches the path, access is allowed (open endpoints).
      */
     private boolean hasAccess(String path, List<String> userRoles) {
         if (userRoles == null || userRoles.isEmpty()) {
-            // Token without roles (old token) - only allow non-restricted paths
             return RBAC_RULES.keySet().stream().noneMatch(path::startsWith);
         }
 
-        for (Map.Entry<String, List<String>> rule : RBAC_RULES.entrySet()) {
-            if (path.startsWith(rule.getKey())) {
-                // Path matches a rule - check if user has any of the required roles
-                return userRoles.stream().anyMatch(role -> rule.getValue().contains(role));
+        // Find the most specific (longest) matching rule
+        String matchedRule = null;
+        for (String ruleKey : RBAC_RULES.keySet()) {
+            if (path.startsWith(ruleKey)) {
+                if (matchedRule == null || ruleKey.length() > matchedRule.length()) {
+                    matchedRule = ruleKey;
+                }
             }
+        }
+
+        if (matchedRule != null) {
+            List<String> requiredRoles = RBAC_RULES.get(matchedRule);
+            return userRoles.stream().anyMatch(requiredRoles::contains);
         }
 
         // No rule matched - path is open to any authenticated user

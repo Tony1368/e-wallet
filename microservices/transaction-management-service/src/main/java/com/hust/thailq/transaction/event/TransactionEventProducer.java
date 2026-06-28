@@ -2,8 +2,13 @@ package com.hust.thailq.transaction.event;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.slf4j.MDC;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -15,7 +20,17 @@ public class TransactionEventProducer {
 
     public void publishTransactionCompleted(TransactionCompletedEvent event) {
         try {
-            kafkaTemplate.send(TOPIC, event.getTransactionId().toString(), event)
+            ProducerRecord<String, TransactionCompletedEvent> record =
+                    new ProducerRecord<>(TOPIC, event.getTransactionId().toString(), event);
+
+            // Propagate requestId via Kafka header for distributed tracing
+            String requestId = MDC.get("requestId");
+            if (requestId != null) {
+                record.headers().add(new RecordHeader("X-Request-Id",
+                        requestId.getBytes(StandardCharsets.UTF_8)));
+            }
+
+            kafkaTemplate.send(record)
                     .whenComplete((result, ex) -> {
                         if (ex != null) {
                             log.error("Failed to publish TransactionCompletedEvent: transactionId={}, error={}",
