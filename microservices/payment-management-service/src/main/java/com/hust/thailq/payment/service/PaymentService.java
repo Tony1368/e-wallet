@@ -33,26 +33,39 @@ public class PaymentService {
         walletClient.debit(fromWallet.getId(), request.getAmount());
 
         // Step 3: Credit to destination wallet (Redis atomic)
-        walletClient.credit(toWallet.getId(), request.getAmount());
+        try {
+            walletClient.credit(toWallet.getId(), request.getAmount());
+        } catch (Exception e) {
+            // COMPENSATION: Hoàn tiền ví nguồn khi credit thất bại
+            walletClient.credit(fromWallet.getId(), request.getAmount());
+            throw new RuntimeException("Transfer failed at credit step. Compensation executed. Reason: " + e.getMessage());
+        }
 
         // Step 4: Record transaction (triggers Kafka event → accounting-service)
-        TransactionRequest txRequest = new TransactionRequest();
-        txRequest.setAmount(request.getAmount());
-        txRequest.setDescription(request.getDescription());
-        txRequest.setFromWalletIban(request.getFromWalletIban());
-        txRequest.setToWalletIban(request.getToWalletIban());
-        txRequest.setFromWalletId(fromWallet.getId());
-        txRequest.setToWalletId(toWallet.getId());
-        txRequest.setTypeId(request.getTypeId() != null ? request.getTypeId() : 1L);
-        java.util.Map<String, Object> txResponse = transactionClient.createTransaction(txRequest);
+        try {
+            TransactionRequest txRequest = new TransactionRequest();
+            txRequest.setAmount(request.getAmount());
+            txRequest.setDescription(request.getDescription());
+            txRequest.setFromWalletIban(request.getFromWalletIban());
+            txRequest.setToWalletIban(request.getToWalletIban());
+            txRequest.setFromWalletId(fromWallet.getId());
+            txRequest.setToWalletId(toWallet.getId());
+            txRequest.setTypeId(request.getTypeId() != null ? request.getTypeId() : 1L);
+            java.util.Map<String, Object> txResponse = transactionClient.createTransaction(txRequest);
 
-        Long transactionId = txResponse != null && txResponse.get("id") != null
-                ? Long.parseLong(String.valueOf(txResponse.get("id"))) : 0L;
+            Long transactionId = txResponse != null && txResponse.get("id") != null
+                    ? Long.parseLong(String.valueOf(txResponse.get("id"))) : 0L;
 
-        return CommandResponse.builder()
-                .id(transactionId)
-                .message("Transfer successful")
-                .build();
+            return CommandResponse.builder()
+                    .id(transactionId)
+                    .message("Transfer successful")
+                    .build();
+        } catch (Exception e) {
+            // COMPENSATION: Hoàn cả 2 ví khi ghi transaction thất bại
+            walletClient.credit(fromWallet.getId(), request.getAmount());
+            walletClient.debit(toWallet.getId(), request.getAmount());
+            throw new RuntimeException("Transfer failed at record step. Compensation executed. Reason: " + e.getMessage());
+        }
     }
 
     public CommandResponse addFunds(TransactionRequest request) {

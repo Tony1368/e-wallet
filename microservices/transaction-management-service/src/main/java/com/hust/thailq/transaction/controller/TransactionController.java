@@ -56,4 +56,10 @@ public class TransactionController {
     public ResponseEntity<java.util.Map<String, Object>> getWalletStats(@PathVariable Long walletId) {
         return ResponseEntity.ok(transactionService.getWalletStats(walletId));
     }
+
+    @GetMapping("/count")
+    public ResponseEntity<java.util.Map<String, Object>> count() {
+        long total = transactionService.count();
+        return ResponseEntity.ok(java.util.Map.of("count", total));
+    }
 }

@@ -90,6 +90,24 @@ public class WalletController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Read balance directly from PostgreSQL (bypass Redis cache).
+     * Used for Write-Behind Data Drift testing.
+     */
+    @GetMapping("/{id}/db-balance")
+    public ResponseEntity<Map<String, Object>> getDbBalance(@PathVariable Long id) {
+        return ResponseEntity.ok(walletService.getDbBalance(id));
+    }
+
+    /**
+     * Read all wallet balances from both Redis and PostgreSQL.
+     * Used for Write-Behind Data Drift testing.
+     */
+    @GetMapping("/drift-check")
+    public ResponseEntity<Map<String, Object>> driftCheck() {
+        return ResponseEntity.ok(walletService.checkDrift());
+    }
+
     @PostMapping("/batch-credit")
     public ResponseEntity<Map<String, Object>> batchCredit(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {

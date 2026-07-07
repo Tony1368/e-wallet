@@ -81,6 +81,10 @@ public class TransactionService {
         );
     }
 
+    public long count() {
+        return transactionRepository.count();
+    }
+
     @Transactional
     public TransactionResponse create(TransactionRequest request) {
         Transaction transaction = new Transaction();

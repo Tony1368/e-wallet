@@ -121,4 +121,18 @@ public class AccountingController {
                 "transferredAt", now.toString()
         ));
     }
+
+    /**
+     * Count journal entries. Each transaction produces 2 entries (DEBIT + CREDIT).
+     * Used for Kafka Eventual Consistency Lag measurement.
+     */
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Object>> count() {
+        long totalEntries = journalEntryRepository.count();
+        return ResponseEntity.ok(Map.of(
+                "journalEntryCount", totalEntries,
+                "transactionCount", totalEntries / 2,
+                "timestamp", Instant.now().toString()
+        ));
+    }
 }

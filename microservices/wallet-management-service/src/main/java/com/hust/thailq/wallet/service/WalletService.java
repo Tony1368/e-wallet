@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -217,6 +218,61 @@ public class WalletService {
     private void setCachedBalance(Long walletId, BigDecimal balance) {
         long cents = balance.multiply(BigDecimal.valueOf(100)).longValue();
         redisTemplate.opsForValue().set(WALLET_BALANCE_KEY_PREFIX + walletId, String.valueOf(cents));
+    }
+
+    /**
+     * Read balance directly from PostgreSQL (bypass Redis).
+     */
+    public Map<String, Object> getDbBalance(Long walletId) {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found: " + walletId));
+        BigDecimal redisBalance = getCachedBalance(walletId);
+        return Map.of(
+                "walletId", walletId,
+                "dbBalance", wallet.getBalance(),
+                "redisBalance", redisBalance != null ? redisBalance : BigDecimal.ZERO,
+                "drift", redisBalance != null ? redisBalance.subtract(wallet.getBalance()) : BigDecimal.ZERO
+        );
+    }
+
+    /**
+     * Check drift across all wallets between Redis and PostgreSQL.
+     */
+    public Map<String, Object> checkDrift() {
+        Set<String> keys = redisTemplate.keys(WALLET_BALANCE_KEY_PREFIX + "*");
+        if (keys == null || keys.isEmpty()) {
+            return Map.of("totalDrift", BigDecimal.ZERO, "walletCount", 0);
+        }
+
+        BigDecimal totalDrift = BigDecimal.ZERO;
+        java.util.List<Map<String, Object>> details = new java.util.ArrayList<>();
+
+        for (String key : keys) {
+            try {
+                Long walletId = Long.parseLong(key.replace(WALLET_BALANCE_KEY_PREFIX, ""));
+                BigDecimal redisBalance = getCachedBalance(walletId);
+                Wallet wallet = walletRepository.findById(walletId).orElse(null);
+                if (wallet != null && redisBalance != null) {
+                    BigDecimal drift = redisBalance.subtract(wallet.getBalance());
+                    totalDrift = totalDrift.add(drift.abs());
+                    details.add(Map.of(
+                            "walletId", walletId,
+                            "redis", redisBalance,
+                            "db", wallet.getBalance(),
+                            "drift", drift
+                    ));
+                }
+            } catch (Exception e) {
+                log.error("Drift check error for key {}: {}", key, e.getMessage());
+            }
+        }
+
+        return Map.of(
+                "totalDrift", totalDrift,
+                "walletCount", details.size(),
+                "details", details,
+                "timestamp", Instant.now().toString()
+        );
     }
 
     private WalletResponse toResponse(Wallet wallet) {
